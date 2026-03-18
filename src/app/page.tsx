@@ -38,7 +38,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 font-sans">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch animate-fadeIn">
-        
+
         {/* Left Side: Create Room */}
         <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 flex flex-col">
           <div className="mb-8">
@@ -138,7 +138,7 @@ export default function Home() {
               เข้าสู่สนามรบ
             </button>
           </form>
-          
+
           <div className="mt-8 p-6 bg-white/5 rounded-3xl border border-white/10 hidden md:block">
             <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-200 mb-2">กฎการเล่นเบื้องต้น</h3>
             <p className="text-sm text-indigo-100/70 leading-relaxed">
@@ -149,7 +149,7 @@ export default function Home() {
       </div>
 
       <footer className="mt-12 text-slate-400 text-sm font-medium">
-        © 2024 Grid Battle 1v1 • พัฒนาโดย Antigravity
+        © Create By Group 6
       </footer>
     </main>
   );

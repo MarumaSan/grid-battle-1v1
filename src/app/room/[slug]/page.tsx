@@ -67,6 +67,21 @@ export default function RoomPage() {
     move(match.id, direction).catch(err => alert(err.message));
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (match?.status !== "playing") return;
+      
+      const key = e.key.toLowerCase();
+      if (key === "w" || key === "arrowup") handleMove("up");
+      else if (key === "s" || key === "arrowdown") handleMove("down");
+      else if (key === "a" || key === "arrowleft") handleMove("left");
+      else if (key === "d" || key === "arrowright") handleMove("right");
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [match?.status, handleMove]);
+
   if (loading) return <WaitingRoom message="กำลังโหลดข้อมูลสมรภูมิ..." />;
   if (error) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 text-center">
@@ -89,16 +104,16 @@ export default function RoomPage() {
         {/* Top Info Bar */}
         <header className="w-full flex items-center justify-between bg-white px-8 py-5 rounded-[2.5rem] shadow-sm border border-slate-100">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">🏛️</div>
+            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">🏆</div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">รหัสสมรภูมิ</p>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tighter">{slug}</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">หมายเลขห้อง</p>
+              <h1 className="text-2xl font-black text-indigo-600 tracking-tighter">{slug}</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className={`px-6 py-2 rounded-full text-sm font-bold border transition-all ${
-              isMyTurn ? "bg-indigo-50 text-indigo-700 border-indigo-200 animate-pulse" : "bg-slate-50 text-slate-400 border-slate-100"
+            <div className={`px-6 py-2.5 rounded-2xl text-sm font-bold border transition-all shadow-sm ${
+              isMyTurn ? "bg-indigo-600 text-white border-indigo-600 animate-pulse" : "bg-slate-50 text-slate-400 border-slate-100"
             }`}>
               {match.status === "finished" ? "จบการแข่งขัน" : isMyTurn ? "ตาของคุณแล้ว!" : `รอผู้เล่น ${match.current_player}`}
             </div>
@@ -155,13 +170,35 @@ export default function RoomPage() {
 
           {/* Right Side: Log & Controls */}
           <aside className="lg:col-span-3 space-y-6">
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 h-full min-h-[400px]">
-              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-3">เหตุการณ์ในสนาม</h2>
-              <div className="space-y-3 opacity-60">
-                <p className="text-xs leading-relaxed"><span className="text-indigo-600 font-bold"># ระบบ:</span> สร้างสมรภูมิขนาด {match.state.grid.length}x{match.state.grid[0].length}</p>
-                <p className="text-xs leading-relaxed"><span className="text-indigo-600 font-bold"># สูตร:</span> ใช้ค่า s = {match.s_value} ในการสุ่มพื้นที่</p>
-                {match.status === "placing" && <p className="text-xs leading-relaxed animate-pulse">รอ Alice วางเบี้ยเริ่มต้น...</p>}
-                {match.move_count > 0 && <p className="text-xs leading-relaxed">เริ่มการต่อสู้อย่างเป็นทางการ!</p>}
+            <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 h-full min-h-[400px] flex flex-col">
+              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-3 italic">บันทึกเหตุการณ์</h2>
+              <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="flex gap-3">
+                  <span className="text-indigo-500 font-bold shrink-0">#</span>
+                  <p className="text-[13px] text-slate-600 leading-relaxed font-medium">เริ่มต้นสมรภูมิ {match.state.grid.length}x{match.state.grid[0].length}</p>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-indigo-500 font-bold shrink-0">#</span>
+                  <p className="text-[13px] text-slate-600 leading-relaxed font-medium">ตั้งค่าพื้นที่ s = {match.s_value}</p>
+                </div>
+                {match.status === "placing" && (
+                  <div className="flex gap-3 animate-pulse">
+                    <span className="text-amber-500 font-bold shrink-0">!</span>
+                    <p className="text-[13px] text-amber-600 leading-relaxed font-bold">รอ Alice วางเบี้ยจุติ...</p>
+                  </div>
+                )}
+                {match.move_count > 0 && (
+                  <div className="flex gap-3">
+                    <span className="text-emerald-500 font-bold shrink-0">✓</span>
+                    <p className="text-[13px] text-emerald-600 leading-relaxed font-bold">การต่อสู้เริ่มขึ้นแล้ว!</p>
+                  </div>
+                )}
+                {match.status === "finished" && (
+                  <div className="flex gap-3 bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                    <span className="text-xl">👑</span>
+                    <p className="text-[13px] text-indigo-700 leading-tight font-bold">การต่อสู้สิ้นสุด<br/>{match.winner} เป็นผู้ชนะ!</p>
+                  </div>
+                )}
               </div>
             </div>
           </aside>

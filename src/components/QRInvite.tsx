@@ -35,9 +35,9 @@ export default function QRInvite({ roomCode }: QRInviteProps) {
       <div className="space-y-4 text-center">
         <h4 className="text-lg font-bold text-slate-800">เชิญเพื่อนเข้าสู่สนาม</h4>
         <p className="text-sm text-slate-500 leading-relaxed max-w-[240px]">
-          สแกนคิวอาร์โค้ดนี้ หรือระบุรหัส <span className="text-indigo-600 font-black">{roomCode}</span> เพื่อเริ่มการท้าทาย
+          สแกนคิวอาร์โค้ดนี้ หรือระบุรหัส <br></br><span className="text-indigo-600 font-black">{roomCode}</span><br></br> เพื่อเริ่มการท้าทาย
         </p>
-        <button 
+        <button
           onClick={() => {
             navigator.clipboard.writeText(roomCode);
             alert("คัดลอกรหัสห้องแล้ว!");
