@@ -2,7 +2,7 @@
 // Grid Battle 1v1 – Game Logic (Pure Functions)
 // ============================================
 
-import { Direction, Position, PlayerRole } from "./types";
+import { Direction, Position } from "./types";
 
 /**
  * Generate the initial grid based on the formula:

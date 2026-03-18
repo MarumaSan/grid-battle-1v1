@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { Match, MatchState, PlayerRole, Room } from "@/lib/types";
+import { MatchState, PlayerRole, Room } from "@/lib/types";
 import { generateGrid } from "@/lib/gameLogic";
 
 export async function POST(req: Request) {
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
     if (createError) throw createError;
     return NextResponse.json({ match: newMatch, role: "Alice" });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: "Failed to join room" }, { status: 500 });
   }
 }

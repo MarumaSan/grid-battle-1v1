@@ -68,8 +68,8 @@ export async function POST(req: Request) {
     if (updateError) throw updateError;
 
     return NextResponse.json({ match: updatedMatch });
-  } catch (error: any) {
-    console.error("[API Match Move]", error);
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to execute move";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }

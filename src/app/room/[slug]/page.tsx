@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Match, PlayerRole } from "@/lib/types";
@@ -29,8 +29,8 @@ export default function RoomPage() {
           setMatch(res.match);
           setRole(res.role);
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดห้อง");
       } finally {
         setLoading(false);
       }
@@ -62,14 +62,16 @@ export default function RoomPage() {
     return () => { channel.unsubscribe(); };
   }, [playerIdentifier, slug, joinRoom]);
 
-  const handleCellClick = (x: number, y: number) => {
+  const handleCellClick = useCallback((x: number, y: number) => {
     if (!match || !role) return;
     if (match.status === "placing" && role === "Alice" && match.current_player === "Alice") {
-      placePawn(match.id, { x, y }).catch(err => alert(err.message));
+      placePawn(match.id, { x, y }).catch(err => {
+        alert(err instanceof Error ? err.message : "ไม่สามารถวางเบี้ยได้");
+      });
     }
-  };
+  }, [match, role, placePawn]);
 
-  const handleMove = (direction: "up" | "down" | "left" | "right") => {
+  const handleMove = useCallback((direction: "up" | "down" | "left" | "right") => {
     if (!match || !role) return;
     const isMyTurn = match.current_player === role;
     if (!isMyTurn || match.status !== "playing") return;
@@ -78,7 +80,7 @@ export default function RoomPage() {
     const currentPos = match.state.pos;
     if (!currentPos) return;
 
-    let nextPos = { ...currentPos };
+    const nextPos = { ...currentPos };
     if (direction === "up") nextPos.x--;
     else if (direction === "down") nextPos.x++;
     else if (direction === "left") nextPos.y--;
@@ -89,7 +91,7 @@ export default function RoomPage() {
     nextRemoved[currentPos.x] = [...nextRemoved[currentPos.x]];
     nextRemoved[currentPos.x][currentPos.y] = true;
 
-    const nextPlayer = role === "Alice" ? "Bob" : "Alice";
+    const nextPlayerRole = role === "Alice" ? "Bob" : "Alice";
     const nextState = { ...match.state, pos: nextPos, removed: nextRemoved };
 
     // 1. Local Optimistic update
@@ -98,7 +100,7 @@ export default function RoomPage() {
       return {
         ...prev,
         state: nextState,
-        current_player: nextPlayer
+        current_player: nextPlayerRole
       };
     });
 
@@ -108,15 +110,15 @@ export default function RoomPage() {
       event: "move",
       payload: { 
         matchState: nextState,
-        nextPlayer: nextPlayer
+        nextPlayer: nextPlayerRole
       }
     });
 
     // 3. Persistent DB update
     move(match.id, direction).catch(err => {
-      alert(`ล้มเหลวในการส่งข้อมูล: ${err.message}`);
+      alert(`ล้มเหลวในการส่งข้อมูล: ${err instanceof Error ? err.message : "ไม่ทราบสาเหตุ"}`);
     });
-  };
+  }, [match, role, slug, move]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

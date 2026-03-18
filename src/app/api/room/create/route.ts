@@ -31,7 +31,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ roomId: room_code });
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message || "Failed to create room" }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to create room";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }

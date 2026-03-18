@@ -57,8 +57,8 @@ export async function POST(req: Request) {
     if (updateError) throw updateError;
 
     return NextResponse.json({ match: updatedMatch });
-  } catch (error: any) {
-    console.error("[API Match Place]", error);
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to place pawn";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }

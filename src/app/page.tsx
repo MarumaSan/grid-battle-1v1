@@ -21,8 +21,8 @@ export default function Home() {
       const finalConfig = { ...config, sList };
       const { roomId } = await createRoom(finalConfig);
       router.push(`/host/${roomId}`);
-    } catch (err: any) {
-      alert(`ล้มเหลวในการสร้างห้อง: ${err.message}`);
+    } catch (err) {
+      alert(`ล้มเหลวในการสร้างห้อง: ${err instanceof Error ? err.message : "ไม่ทราบสาเหตุ"}`);
     } finally {
       setLoading(false);
     }

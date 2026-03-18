@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { PlayerRole, MatchStatus } from "@/lib/types";
+import type { PlayerRole } from "@/lib/types";
 
 interface PlayerInfoProps {
   role: PlayerRole | null;

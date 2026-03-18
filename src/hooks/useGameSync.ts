@@ -1,20 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Match, Position, Direction, PlayerRole, RoomConfig } from "@/lib/types";
 import { nanoid } from "nanoid";
 
 export function useGameSync() {
-  const [playerIdentifier, setPlayerIdentifier] = useState<string | null>(null);
-
-  useEffect(() => {
+  // Initialize state directly to avoid cascading renders in useEffect
+  const [playerIdentifier] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
     let id = localStorage.getItem("gb_player_id");
     if (!id) {
       id = nanoid(10);
       localStorage.setItem("gb_player_id", id);
     }
-    setPlayerIdentifier(id);
-  }, []);
+    return id;
+  });
 
   const createRoom = useCallback(async (config: RoomConfig) => {
     if (!playerIdentifier) throw new Error("Player identifier not ready");

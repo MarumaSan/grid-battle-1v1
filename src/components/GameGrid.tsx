@@ -32,7 +32,7 @@ const Cell = memo(({
   
   // Minimal conditional logic inside render
   const cellClass = useMemo(() => {
-    let base = `${cellSize} rounded-2xl flex items-center justify-center transition-all duration-300 ${fontSize} select-none relative group `;
+    const base = `${cellSize} rounded-2xl flex items-center justify-center transition-all duration-300 ${fontSize} select-none relative group `;
 
     if (isCurrentPos) {
       return base + "bg-gradient-to-br from-indigo-500 to-violet-600 shadow-[0_8px_20px_rgba(99,102,241,0.4)] scale-110 z-10 ring-4 ring-white ";
