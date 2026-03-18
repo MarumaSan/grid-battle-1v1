@@ -4,35 +4,39 @@ import React from "react";
 import type { PlayerRole } from "@/lib/types";
 
 interface GameOverModalProps {
+  isOpen: boolean;
   winner: PlayerRole;
   role: PlayerRole;
   moveCount: number;
   onClose: () => void;
 }
 
-export default function GameOverModal({ winner, role, moveCount, onClose }: GameOverModalProps) {
+export default function GameOverModal({ isOpen, winner, role, moveCount, onClose }: GameOverModalProps) {
+  if (!isOpen) return null;
+
   const isWinner = winner === role;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className={`relative p-8 rounded-3xl border-2 max-w-md w-full mx-4 ${
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fadeIn p-4">
+      <div className={`relative p-10 rounded-[2.5rem] border-2 max-w-md w-full ${
         isWinner
-          ? "bg-gradient-to-br from-green-900/80 to-emerald-900/80 border-green-400/50"
-          : "bg-gradient-to-br from-red-900/80 to-rose-900/80 border-red-400/50"
-      } backdrop-blur-xl shadow-2xl`}>
-        {/* Confetti-like particles for winner */}
+          ? "bg-gradient-to-br from-emerald-950/90 to-slate-950/90 border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.2)]"
+          : "bg-gradient-to-br from-rose-950/90 to-slate-950/90 border-rose-500/50 shadow-[0_0_50px_rgba(244,63,94,0.2)]"
+      } backdrop-blur-2xl animate-scaleIn`}>
+        
+        {/* Animated Background Elements for Winner */}
         {isWinner && (
-          <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
-            {Array.from({ length: 20 }).map((_, i) => (
+          <div className="absolute inset-0 overflow-hidden rounded-[2.5rem] pointer-events-none">
+            {Array.from({ length: 15 }).map((_, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 rounded-full animate-confetti"
+                className="absolute w-1 h-1 rounded-full animate-confetti"
                 style={{
                   left: `${Math.random() * 100}%`,
-                  top: `-10%`,
-                  backgroundColor: ["#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899"][i % 5],
+                  top: `-5%`,
+                  backgroundColor: ["#22d3ee", "#818cf8", "#fbbf24", "#34d399", "#f472b6"][i % 5],
                   animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${2 + Math.random() * 3}s`,
+                  animationDuration: `${3 + Math.random() * 2}s`,
                 }}
               />
             ))}
@@ -40,37 +44,51 @@ export default function GameOverModal({ winner, role, moveCount, onClose }: Game
         )}
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-          <div className="text-6xl">
-            {isWinner ? "🏆" : "💀"}
+        <div className="relative z-10 flex flex-col items-center gap-6 text-center">
+          <div className="relative">
+            <div className={`text-7xl mb-2 ${isWinner ? "animate-bounce" : "animate-pulse"}`}>
+              {isWinner ? "🏆" : "💀"}
+            </div>
+            {isWinner && (
+              <div className="absolute -inset-4 bg-emerald-500/20 blur-2xl rounded-full -z-10 animate-pulse" />
+            )}
           </div>
 
-          <h2 className={`text-3xl font-black ${
-            isWinner ? "text-green-300" : "text-red-300"
-          }`}>
-            {isWinner ? "VICTORY!" : "DEFEAT!"}
-          </h2>
+          <div>
+            <h2 className={`text-4xl font-black tracking-tighter mb-2 ${
+              isWinner ? "text-emerald-400" : "text-rose-400"
+            }`}>
+              {isWinner ? "VICTORY" : "DEFEAT"}
+            </h2>
+            <div className="h-1 w-12 bg-slate-800 rounded-full mx-auto" />
+          </div>
 
-          <p className="text-gray-300 text-lg">
+          <p className="text-slate-300 font-medium leading-relaxed">
             {isWinner
-              ? `You won as ${role}! Your opponent had no moves left.`
-              : `${winner} wins! You were trapped with no valid moves.`}
+              ? `Tremendous strategy! You've conquered the grid as ${role}.`
+              : `A valiant effort, but ${winner} has outmaneuvered you this time.`}
           </p>
 
-          <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
-            <span>Total Moves: {moveCount}</span>
-            <span>Winner: {winner}</span>
+          <div className="w-full grid grid-cols-2 gap-4 my-2">
+            <div className="bg-slate-900/50 py-3 rounded-2xl border border-slate-800">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Moves</div>
+              <div className="text-xl font-black text-white">{moveCount}</div>
+            </div>
+            <div className="bg-slate-900/50 py-3 rounded-2xl border border-slate-800">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Winner</div>
+              <div className="text-xl font-black text-white">{winner.charAt(0)}</div>
+            </div>
           </div>
 
           <button
             onClick={onClose}
-            className={`mt-4 px-8 py-3 rounded-xl font-bold text-lg transition-all hover:scale-105 ${
+            className={`w-full py-4 rounded-2xl font-black text-lg tracking-wide transition-all active:scale-95 shadow-lg ${
               isWinner
-                ? "bg-green-500 text-white hover:bg-green-400 shadow-lg shadow-green-500/30"
-                : "bg-red-500 text-white hover:bg-red-400 shadow-lg shadow-red-500/30"
+                ? "bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20"
+                : "bg-rose-600 text-white hover:bg-rose-500 shadow-rose-600/20"
             }`}
           >
-            Back to Home
+            EXIT TO LOBBY
           </button>
         </div>
       </div>

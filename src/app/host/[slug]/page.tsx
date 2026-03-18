@@ -45,32 +45,25 @@ export default function HostPage() {
 
     fetchRoom();
 
-    // Subscribe to new/updated matches
+    // Subscribe to new/updated matches for THIS room
+    if (!room?.id) return;
+    
     const channel = supabase
-      .channel(`room:${slug}`)
+      .channel(`room:${room.id}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "gb_matches",
+          filter: `room_id=eq.${room.id}`,
         },
-        async (payload) => {
-          // Re-fetch all matches for this room to be safe, 
-          // or manually update the state array.
-          const { data: updatedMatches } = await supabase
-            .from("gb_matches")
-            .select("*")
-            .eq("room_code_denorm", slug) // I should probably have added room_code to matches for easier filtering
-            .order("created_at", { ascending: false });
-            
-            // Wait, I didn't add room_code to matches. 
-            // I'll just filter payload.new if available.
-            if (payload.eventType === "INSERT") {
-              setMatches(prev => [payload.new as Match, ...prev]);
-            } else if (payload.eventType === "UPDATE") {
-              setMatches(prev => prev.map(m => m.id === payload.new.id ? (payload.new as Match) : m));
-            }
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setMatches(prev => [payload.new as Match, ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            setMatches(prev => prev.map(m => m.id === payload.new.id ? (payload.new as Match) : m));
+          }
         }
       )
       .subscribe();
@@ -78,7 +71,7 @@ export default function HostPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [slug]);
+  }, [slug, room?.id]);
 
   const handleCloseRoom = async () => {
     if (!room) return;

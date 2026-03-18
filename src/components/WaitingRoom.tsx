@@ -2,7 +2,15 @@
 
 import React from "react";
 
-export default function WaitingRoom() {
+interface WaitingRoomProps {
+  message?: string;
+  description?: string;
+}
+
+export default function WaitingRoom({ 
+  message = "Waiting for opponent...", 
+  description = "Another player needs to join the room" 
+}: WaitingRoomProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-6 py-16">
       {/* Animated grid */}
@@ -26,10 +34,10 @@ export default function WaitingRoom() {
 
       <div className="text-center">
         <h2 className="text-white text-xl font-bold mb-2">
-          Waiting for opponent...
+          {message}
         </h2>
-        <p className="text-gray-400 text-sm">
-          Another player needs to join the room
+        <p className="text-slate-400 text-sm">
+          {description}
         </p>
       </div>
 

@@ -8,7 +8,7 @@ export type Direction = "up" | "down" | "left" | "right";
 
 export type Position = { x: number; y: number };
 
-export type MatchStatus = "waiting" | "placing" | "playing" | "finished";
+export type MatchStatus = "waiting_for_opponent" | "placing" | "playing" | "finished";
 
 export type RoomStatus = "waiting" | "active" | "closed";
 

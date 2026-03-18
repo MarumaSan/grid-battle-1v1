@@ -131,8 +131,8 @@ export default function RoomPage() {
 
       <GameOverModal
         isOpen={match.status === "finished"}
-        winner={match.winner!}
-        role={role}
+        winner={match.winner as PlayerRole}
+        role={role as PlayerRole}
         moveCount={match.move_count}
         onClose={() => router.push("/")}
       />

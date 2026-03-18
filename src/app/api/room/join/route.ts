@@ -13,8 +13,8 @@ export async function POST(req: Request) {
     // 1. Find the room
     const { data: room, error: roomError } = await supabase
       .from("gb_rooms")
-      .get()
-      .filter("room_code", "eq", roomCode)
+      .select("*")
+      .eq("room_code", roomCode)
       .single();
 
     if (roomError || !room) {
