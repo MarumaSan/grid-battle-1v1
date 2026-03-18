@@ -113,9 +113,12 @@ export default function RoomPage() {
 
           <div className="flex items-center gap-4">
             <div className={`px-6 py-2.5 rounded-2xl text-sm font-bold border transition-all shadow-sm ${
+              role === "Observer" ? "bg-slate-800 text-white border-slate-900" :
               isMyTurn ? "bg-indigo-600 text-white border-indigo-600 animate-pulse" : "bg-slate-50 text-slate-400 border-slate-100"
             }`}>
-              {match.status === "finished" ? "จบการแข่งขัน" : isMyTurn ? "ตาของคุณแล้ว!" : `รอผู้เล่น ${match.current_player === "Alice" ? "อลิซ" : "บ็อบ"}`}
+              {role === "Observer" ? "โหมดผู้ดูแล (Spectator)" :
+               match.status === "finished" ? "จบการแข่งขัน" : 
+               isMyTurn ? "ตาของคุณแล้ว!" : `รอผู้เล่น ${match.current_player === "Alice" ? "อลิซ" : "บ็อบ"}`}
             </div>
           </div>
         </header>
@@ -128,9 +131,15 @@ export default function RoomPage() {
             <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-3">ข้อมูลผู้เล่น</h2>
               <div className="space-y-4">
-                <div className={`p-4 rounded-2xl border transition-all ${role === "Alice" ? "bg-indigo-50/50 border-indigo-200" : "bg-slate-50 border-slate-100"}`}>
+                <div className={`p-4 rounded-2xl border transition-all ${
+                  role === "Observer" ? "bg-slate-50 border-slate-200" :
+                  role === "Alice" ? "bg-indigo-50/50 border-indigo-200" : "bg-blue-50/50 border-blue-200"
+                }`}>
                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">ตำแหน่ง</p>
-                  <p className="font-bold text-slate-800">{role === "Alice" ? "เจ้าบ้าน (อลิซ)" : "ผู้ท้าชิง (บ็อบ)"}</p>
+                  <p className="font-bold text-slate-800">
+                    {role === "Observer" ? "ผู้ดูแลห้อง (Admin)" :
+                     role === "Alice" ? "เจ้าบ้าน (อลิซ)" : "ผู้ท้าชิง (บ็อบ)"}
+                  </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">จำนวนการเดิน</p>
@@ -139,24 +148,21 @@ export default function RoomPage() {
               </div>
             </div>
 
-            <div className="bg-indigo-600 rounded-[2.5rem] p-8 shadow-xl text-white">
-              <h3 className="text-lg font-bold mb-4 border-b border-indigo-500 pb-2">วิธีเล่น</h3>
-              <div className="space-y-4 text-sm text-indigo-50/90 leading-relaxed">
-                <p>
-                  <span className="font-bold text-white">1. เตรียมสมรภูมิ:</span> สนามรบจะถูกลบพื้นที่บางส่วนตามสูตรคณิตศาสตร์
-                </p>
-                <p>
-                  <span className="font-bold text-white">2. วางเบี้ย:</span> เจ้าบ้าน (อลิซ) เลือกจุดเริ่มต้นเพื่อวางเบี้ยและเริ่มเกม
-                </p>
-                <p>
-                  <span className="font-bold text-white">3. การเคลื่อนที่:</span> ผลัดกันเดินไปยังช่องที่ติดกัน (บน, ล่าง, ซ้าย, ขวา)
-                </p>
-                <p>
-                  <span className="font-bold text-white">4. กฎการทำลาย:</span> ช่องที่เดินผ่านไปแล้วจะถูกทำลายทิ้งทันที!
-                </p>
-                <p className="pt-2 font-bold text-indigo-200 italic">
-                  * ใครติดกับดักจนเดินต่อไม่ได้จะเป็นผู้แพ้
-                </p>
+            <div className={`rounded-[2.5rem] p-8 shadow-xl text-white ${role === "Observer" ? "bg-slate-800" : "bg-indigo-600"}`}>
+              <h3 className="text-lg font-bold mb-4 border-b border-white/20 pb-2">
+                {role === "Observer" ? "มุมมองผู้ดูแล" : "วิธีเล่น"}
+              </h3>
+              <div className="space-y-4 text-sm text-white/90 leading-relaxed">
+                {role === "Observer" ? (
+                  <p>คุณกำลังรับชมการต่อสู้ในฐานะผู้ดูแลห้อง คุณไม่สามารถแทรกแซงการเล่นได้ แต่สามารถดูสถิติและสถานะการเดินของเบี้ยแบบเรียลไทม์</p>
+                ) : (
+                  <>
+                    <p><span className="font-bold text-white">1. เตรียมสมรภูมิ:</span> สนามรบจะถูกลบพื้นที่บางส่วนตามสูตรคณิตศาสตร์</p>
+                    <p><span className="font-bold text-white">2. วางเบี้ย:</span> เจ้าบ้าน (อลิซ) เลือกจุดเริ่มต้นเพื่อวางเบี้ยและเริ่มเกม</p>
+                    <p><span className="font-bold text-white">3. การเคลื่อนที่:</span> ผลัดกันเดินไปยังช่องที่ติดกัน (บน, ล่าง, ซ้าย, ขวา)</p>
+                    <p><span className="font-bold text-white">4. กฎการทำลาย:</span> ช่องที่เดินผ่านไปแล้วจะถูกทำลายทิ้งทันที!</p>
+                  </>
+                )}
               </div>
             </div>
           </aside>

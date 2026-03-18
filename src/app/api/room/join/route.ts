@@ -18,9 +18,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Room not found" }, { status: 404 });
     }
 
-    const roomData = room as Room;
+    const roomData = room as Room & { config: { creator_id?: string } };
 
-    // 2. Check if player is already in a match for this room
+    // 2. CHECK: If the player is the Host (Administrator)
+    if (roomData.config.creator_id === playerIdentifier) {
+      // Find the most recent active match to watch
+      const { data: latestMatch } = await supabase
+        .from("gb_matches")
+        .select("*")
+        .eq("room_id", roomData.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      return NextResponse.json({ 
+        match: latestMatch, 
+        role: "Observer" 
+      });
+    }
+
+    // 3. Check if player is already in a match for this room
     const { data: existingMatch } = await supabase
       .from("gb_matches")
       .select("*")
@@ -35,7 +52,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ match: existingMatch, role });
     }
 
-    // 3. Matchmaking (find "waiting" match)
+    // 4. Matchmaking (find "waiting" match)
     const { data: waitingMatch } = await supabase
       .from("gb_matches")
       .select("*")
@@ -62,7 +79,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ match: joinedMatch, role: "Bob" });
     }
 
-    // 4. Create new match as Alice
+    // 5. Create new match as Alice
     const s_value = roomData.config.sList[Math.floor(Math.random() * roomData.config.sList.length)];
     const grid = generateGrid(
       roomData.config.N,

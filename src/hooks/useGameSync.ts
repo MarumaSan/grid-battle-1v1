@@ -17,10 +17,14 @@ export function useGameSync() {
   }, []);
 
   const createRoom = useCallback(async (config: RoomConfig) => {
+    if (!playerIdentifier) throw new Error("Player identifier not ready");
+
     const res = await fetch("/api/room/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ config }),
+      body: JSON.stringify({ 
+        config: { ...config, creator_id: playerIdentifier } 
+      }),
     });
 
     const data = await res.json();
@@ -28,7 +32,7 @@ export function useGameSync() {
       throw new Error(data.message || "Failed to create room");
     }
     return data as { roomId: string };
-  }, []);
+  }, [playerIdentifier]);
 
   const joinRoom = useCallback(async (roomCode: string) => {
     if (!playerIdentifier) return null;

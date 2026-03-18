@@ -5,7 +5,7 @@ import { RoomConfig } from "@/lib/types";
 
 export async function POST(req: Request) {
   try {
-    const { config } = (await req.json()) as { config: RoomConfig };
+    const { config } = (await req.json()) as { config: RoomConfig & { creator_id?: string } };
     
     // Generate room code (6 chars)
     const room_code = nanoid(6).toUpperCase();
@@ -17,12 +17,12 @@ export async function POST(req: Request) {
       .insert([
         {
           room_code,
-          config, // Supabase JS handles objects for jsonb
+          config, // creator_id is now inside config
           status: "waiting",
         },
       ])
       .select()
-      .maybeSingle(); // maybeSingle is safer for logging
+      .maybeSingle();
 
     if (error) {
       console.error("[API Create Room] Supabase Error:", error);

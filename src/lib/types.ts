@@ -2,7 +2,7 @@
 // Grid Battle 1v1 – Shared Types (Supabase)
 // ============================================
 
-export type PlayerRole = "Alice" | "Bob";
+export type PlayerRole = "Alice" | "Bob" | "Observer";
 
 export type Direction = "up" | "down" | "left" | "right";
 
