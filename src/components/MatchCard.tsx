@@ -46,14 +46,14 @@ export default function MatchCard({ match, roomCode }: MatchCardProps) {
       <div className="space-y-4 mb-8">
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ผู้เล่น Alice</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ผู้เล่น อลิซ (Alice)</span>
             <span className="font-bold text-slate-700 truncate max-w-[120px]">
               {match.alice_id ? "เชื่อมต่อแล้ว" : "รอดาวน์โหลด..."}
             </span>
           </div>
           <div className="text-2xl">⚔️</div>
           <div className="flex flex-col text-right">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ผู้เล่น Bob</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ผู้เล่น บ็อบ (Bob)</span>
             <span className="font-bold text-slate-700 truncate max-w-[120px]">
               {match.bob_id ? "เชื่อมต่อแล้ว" : "ยังไม่มีคนเข้า"}
             </span>
@@ -64,7 +64,7 @@ export default function MatchCard({ match, roomCode }: MatchCardProps) {
           <div className="p-3 bg-blue-50/50 rounded-xl">
             <p className="text-[10px] uppercase font-bold text-blue-400 mb-1">ตาผู้เล่น</p>
             <p className="font-bold text-blue-700">
-              {match.status === "finished" ? "-" : match.current_player}
+              {match.status === "finished" ? "-" : match.current_player === "Alice" ? "อลิซ" : "บ็อบ"}
             </p>
           </div>
           <div className="p-3 bg-indigo-50/50 rounded-xl">

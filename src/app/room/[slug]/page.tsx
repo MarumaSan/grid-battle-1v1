@@ -115,7 +115,7 @@ export default function RoomPage() {
             <div className={`px-6 py-2.5 rounded-2xl text-sm font-bold border transition-all shadow-sm ${
               isMyTurn ? "bg-indigo-600 text-white border-indigo-600 animate-pulse" : "bg-slate-50 text-slate-400 border-slate-100"
             }`}>
-              {match.status === "finished" ? "จบการแข่งขัน" : isMyTurn ? "ตาของคุณแล้ว!" : `รอผู้เล่น ${match.current_player}`}
+              {match.status === "finished" ? "จบการแข่งขัน" : isMyTurn ? "ตาของคุณแล้ว!" : `รอผู้เล่น ${match.current_player === "Alice" ? "อลิซ" : "บ็อบ"}`}
             </div>
           </div>
         </header>
@@ -130,7 +130,7 @@ export default function RoomPage() {
               <div className="space-y-4">
                 <div className={`p-4 rounded-2xl border transition-all ${role === "Alice" ? "bg-indigo-50/50 border-indigo-200" : "bg-slate-50 border-slate-100"}`}>
                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">ตำแหน่ง</p>
-                  <p className="font-bold text-slate-800">{role === "Alice" ? "เจ้าบ้าน (Alice)" : "ผู้ท้าชิง (Bob)"}</p>
+                  <p className="font-bold text-slate-800">{role === "Alice" ? "เจ้าบ้าน (อลิซ)" : "ผู้ท้าชิง (บ็อบ)"}</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">จำนวนการเดิน</p>
@@ -140,17 +140,23 @@ export default function RoomPage() {
             </div>
 
             <div className="bg-indigo-600 rounded-[2.5rem] p-8 shadow-xl text-white">
-              <h3 className="text-lg font-bold mb-4">วิธีเล่น</h3>
-              <p className="text-sm text-indigo-100/80 leading-relaxed mb-6">
-                {match.status === "placing" 
-                  ? "Alice ต้องเลือกช่องเแรกเพื่อวางเบี้ยและเริ่มการต่อสู้" 
-                  : "คลิกช่องรอบๆ ตัว หรือใช้ปุ่มลูกศรเพื่อเคลื่อนที่เบี้ย ช่องที่ถูกเหยียบจะถูกทำลาย!"}
-              </p>
-              <div className="flex gap-2">
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">W</div>
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">A</div>
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">S</div>
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">D</div>
+              <h3 className="text-lg font-bold mb-4 border-b border-indigo-500 pb-2">วิธีเล่น</h3>
+              <div className="space-y-4 text-sm text-indigo-50/90 leading-relaxed">
+                <p>
+                  <span className="font-bold text-white">1. เตรียมสมรภูมิ:</span> สนามรบจะถูกลบพื้นที่บางส่วนตามสูตรคณิตศาสตร์
+                </p>
+                <p>
+                  <span className="font-bold text-white">2. วางเบี้ย:</span> เจ้าบ้าน (อลิซ) เลือกจุดเริ่มต้นเพื่อวางเบี้ยและเริ่มเกม
+                </p>
+                <p>
+                  <span className="font-bold text-white">3. การเคลื่อนที่:</span> ผลัดกันเดินไปยังช่องที่ติดกัน (บน, ล่าง, ซ้าย, ขวา)
+                </p>
+                <p>
+                  <span className="font-bold text-white">4. กฎการทำลาย:</span> ช่องที่เดินผ่านไปแล้วจะถูกทำลายทิ้งทันที!
+                </p>
+                <p className="pt-2 font-bold text-indigo-200 italic">
+                  * ใครติดกับดักจนเดินต่อไม่ได้จะเป็นผู้แพ้
+                </p>
               </div>
             </div>
           </aside>
@@ -184,7 +190,7 @@ export default function RoomPage() {
                 {match.status === "placing" && (
                   <div className="flex gap-3 animate-pulse">
                     <span className="text-amber-500 font-bold shrink-0">!</span>
-                    <p className="text-[13px] text-amber-600 leading-relaxed font-bold">รอ Alice วางเบี้ยจุติ...</p>
+                    <p className="text-[13px] text-amber-600 leading-relaxed font-bold">รออลิซวางเบี้ยจุติ...</p>
                   </div>
                 )}
                 {match.move_count > 0 && (
@@ -196,7 +202,7 @@ export default function RoomPage() {
                 {match.status === "finished" && (
                   <div className="flex gap-3 bg-indigo-50 p-3 rounded-xl border border-indigo-100">
                     <span className="text-xl">👑</span>
-                    <p className="text-[13px] text-indigo-700 leading-tight font-bold">การต่อสู้สิ้นสุด<br/>{match.winner} เป็นผู้ชนะ!</p>
+                    <p className="text-[13px] text-indigo-700 leading-tight font-bold">การต่อสู้สิ้นสุด<br/>{match.winner === "Alice" ? "อลิซ" : "บ็อบ"} เป็นผู้ชนะ!</p>
                   </div>
                 )}
               </div>

@@ -35,7 +35,7 @@ export default function GameOverModal({ isOpen, winner, onClose, match }: GameOv
         <div className="p-10 pt-12 text-center bg-white">
           <div className="inline-block px-10 py-5 bg-indigo-50 rounded-3xl border-2 border-indigo-100 mb-10">
             <p className="text-5xl font-black text-indigo-600 tracking-tighter leading-none">
-              ผู้เล่น {winner}
+              {winner === "Alice" ? "คุณอลิซ (Alice)" : "คุณบ็อบ (Bob)"}
             </p>
           </div>
 

@@ -116,12 +116,12 @@ export default function Home() {
         <section className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] p-8 shadow-xl flex flex-col text-white">
           <div className="mb-8">
             <h2 className="text-4xl font-bold mb-2">เข้าร่วมสมรภูมิ</h2>
-            <p className="text-indigo-100 text-lg opacity-80">ระบุรหัสห้องเพื่อเริ่มการต่อสู้ 1v1</p>
+            <p className="text-indigo-100 text-lg opacity-80">ระบุหมายเลขห้องเพื่อเริ่มการต่อสู้ 1v1</p>
           </div>
 
           <form onSubmit={handleJoin} className="space-y-6 flex-1 flex flex-col justify-center">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-indigo-100 ml-1">รหัสห้อง (Room Code)</label>
+              <label className="text-sm font-semibold text-indigo-100 ml-1">หมายเลขห้อง (Room Number)</label>
               <input
                 type="text"
                 value={roomCode}
