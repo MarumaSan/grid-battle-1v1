@@ -98,14 +98,14 @@ export default function RoomPage() {
     return <WaitingRoom message="Waiting for an opponent to join..." />;
   }
 
-  const isMyTurn = match.currentPlayer === role;
+  const isMyTurn = match.current_player === role;
 
   return (
     <main className="min-h-screen bg-slate-950 text-white p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-4xl flex flex-col gap-8">
         <PlayerInfo 
           role={role} 
-          currentPlayer={match.currentPlayer} 
+          currentPlayer={match.current_player} 
           moveCount={match.move_count} 
         />
 
@@ -123,7 +123,7 @@ export default function RoomPage() {
           <div className="text-center text-slate-500 text-sm font-medium animate-pulse">
             {match.status === "placing" 
               ? (role === "Alice" ? "Choose your starting position" : "Alice is choosing starting position...")
-              : (isMyTurn ? "Your turn! Use arrow keys or click adjacent cells." : `Waiting for ${match.currentPlayer}...`)
+              : (isMyTurn ? "Your turn! Use arrow keys or click adjacent cells." : `Waiting for ${match.current_player}...`)
             }
           </div>
         </div>

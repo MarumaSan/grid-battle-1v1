@@ -27,14 +27,14 @@ export default function MatchCard({ match }: MatchCardProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <PlayerBadge name="Alice" isActive={match.currentPlayer === "Alice" && !isFinished} isWinner={match.winner === "Alice"} />
-        <PlayerBadge name={isWaiting ? "???" : "Bob"} isActive={match.currentPlayer === "Bob" && !isFinished} isWinner={match.winner === "Bob"} />
+        <PlayerBadge name="Alice" isActive={match.current_player === "Alice" && !isFinished} isWinner={match.winner === "Alice"} />
+        <PlayerBadge name={isWaiting ? "???" : "Bob"} isActive={match.current_player === "Bob" && !isFinished} isWinner={match.winner === "Bob"} />
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-slate-800/50">
         <div className="flex flex-col">
           <span className="text-[10px] font-bold text-slate-600 uppercase">Param S</span>
-          <span className="text-lg font-black text-cyan-400/80">{match.s}</span>
+          <span className="text-lg font-black text-cyan-400/80">{match.s_value}</span>
         </div>
         <div className="flex flex-col items-end">
           <span className="text-[10px] font-bold text-slate-600 uppercase">Total Moves</span>

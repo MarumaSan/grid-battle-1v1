@@ -29,16 +29,15 @@ export interface MatchState {
 export interface Match {
   id: string; // uuid
   room_id: string;
-  players: {
-    Alice: string | null; // socket ID or player identifier
-    Bob: string | null;
-  };
-  currentPlayer: PlayerRole;
+  alice_id: string | null;
+  bob_id: string | null;
+  current_player: PlayerRole;
   state: MatchState;
-  s: number;
+  s_value: number;
   status: MatchStatus;
   winner: PlayerRole | null;
   move_count: number;
+  created_at?: string;
 }
 
 export interface Room {
@@ -46,4 +45,5 @@ export interface Room {
   room_code: string;
   config: RoomConfig;
   status: RoomStatus;
+  created_at?: string;
 }

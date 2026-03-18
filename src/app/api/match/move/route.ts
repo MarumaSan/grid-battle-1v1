@@ -1,74 +1,75 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { applyMove, getValidMoves } from "@/lib/gameLogic";
-import { Direction, Match } from "@/lib/types";
+import { Match, Direction, PlayerRole } from "@/lib/types";
+import { getNextPosition, canMove } from "@/lib/gameLogic";
 
 export async function POST(req: Request) {
   try {
-    const { matchId, direction, playerIdentifier } = (await req.json()) as { 
-      matchId: string; 
-      direction: Direction;
-      playerIdentifier: string 
-    };
+    const { matchId, direction } = (await req.json()) as { matchId: string, direction: Direction };
 
-    // 1. Find match
-    const { data: matchData, error: matchError } = await supabase
+    // 1. Get current match
+    const { data: match, error: fetchError } = await supabase
       .from("gb_matches")
       .select("*")
       .eq("id", matchId)
       .single();
 
-    if (matchError || !matchData) {
-      return NextResponse.json({ message: "Match not found" }, { status: 404 });
+    if (fetchError || !match) throw fetchError || new Error("Match not found");
+    
+    const matchData = match as Match;
+
+    // 2. Validate move
+    if (matchData.status !== "playing") throw new Error("Incorrect state");
+    if (!matchData.state.pos) throw new Error("No pawn on grid");
+
+    // Calculate move
+    const nextPos = getNextPosition(matchData.state.pos, direction);
+    
+    // Check if move is valid (within grid, available cell, not already removed)
+    if (
+      nextPos.x < 0 || nextPos.x >= matchData.state.grid.length ||
+      nextPos.y < 0 || nextPos.y >= matchData.state.grid[0].length ||
+      !matchData.state.grid[nextPos.x][nextPos.y] ||
+      matchData.state.removed[nextPos.x][nextPos.y]
+    ) {
+      throw new Error("Invalid move");
     }
 
-    const match = matchData as any; // Cast for now
+    // 3. Execute move
+    const newState = { ...matchData.state };
+    newState.pos = nextPos;
+    newState.removed[nextPos.x][nextPos.y] = true;
 
-    // 2. Validate move authority
-    const role = match.alice_id === playerIdentifier ? "Alice" : "Bob";
-    if (match.currentPlayer !== role) {
-      return NextResponse.json({ message: "Not your turn" }, { status: 403 });
+    const nextPlayer: PlayerRole = matchData.current_player === "Alice" ? "Bob" : "Alice";
+    const canNextMove = canMove(nextPos, matchData.state.grid, newState.removed);
+    
+    let nextStatus = matchData.status;
+    let winner = null;
+
+    if (!canNextMove) {
+      nextStatus = "finished";
+      winner = matchData.current_player; // Current player wins if next player has no moves
     }
 
-    // 3. Apply move
-    // Build a match object for the pure game logic
-    const matchObj = {
-      ...match,
-      grid: match.state.grid,
-      removed: match.state.removed,
-      pos: match.state.pos,
-      moveCount: match.move_count,
-    } as any;
+    // 4. Update match
+    const { data: updatedMatch, error: updateError } = await supabase
+      .from("gb_matches")
+      .update({
+        state: newState,
+        current_player: nextPlayer,
+        status: nextStatus,
+        winner: winner,
+        move_count: matchData.move_count + 1,
+      })
+      .eq("id", matchId)
+      .select()
+      .single();
 
-    try {
-      const updatedMatch = applyMove(matchObj, direction);
-      
-      // 4. Update Supabase
-      const { data: finalMatch, error: updateError } = await supabase
-        .from("gb_matches")
-        .update({
-          state: {
-            grid: updatedMatch.grid,
-            removed: updatedMatch.removed,
-            pos: updatedMatch.pos,
-          },
-          currentPlayer: updatedMatch.currentPlayer,
-          status: updatedMatch.status,
-          winner: updatedMatch.winner,
-          move_count: updatedMatch.moveCount,
-        })
-        .eq("id", matchId)
-        .select()
-        .single();
+    if (updateError) throw updateError;
 
-      if (updateError) throw updateError;
-
-      return NextResponse.json({ match: finalMatch });
-    } catch (moveErr) {
-      return NextResponse.json({ message: (moveErr as Error).message }, { status: 400 });
-    }
-  } catch (error) {
-    console.error("[API Move]", error);
-    return NextResponse.json({ message: "Failed to process move" }, { status: 500 });
+    return NextResponse.json({ match: updatedMatch });
+  } catch (error: any) {
+    console.error("[API Match Move]", error);
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }

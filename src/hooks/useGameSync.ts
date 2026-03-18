@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
-import { Match, PlayerRole, Room } from "@/lib/types";
+import { useCallback, useEffect, useState } from "react";
+import { Match, Position, Direction, PlayerRole } from "@/lib/types";
 import { nanoid } from "nanoid";
 
 export function useGameSync() {
@@ -11,50 +10,49 @@ export function useGameSync() {
   useEffect(() => {
     let id = localStorage.getItem("gb_player_id");
     if (!id) {
-      id = nanoid();
+      id = nanoid(10);
       localStorage.setItem("gb_player_id", id);
     }
     setPlayerIdentifier(id);
   }, []);
 
-  const createRoom = useCallback(async (config: any) => {
-    const res = await fetch("/api/room/create", {
-      method: "POST",
-      body: JSON.stringify({ config }),
-    });
-    const { roomId } = await res.json();
-    return roomId;
-  }, []);
-
-  const joinRoom = useCallback(async (roomId: string) => {
+  const joinRoom = useCallback(async (roomCode: string) => {
     if (!playerIdentifier) return null;
+
     const res = await fetch("/api/room/join", {
       method: "POST",
-      body: JSON.stringify({ roomId, playerIdentifier }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomCode, playerIdentifier }),
     });
+
     if (!res.ok) throw new Error("Join failed");
-    return await res.json();
+    return res.json() as Promise<{ match: Match; role: PlayerRole }>;
   }, [playerIdentifier]);
 
-  const placePawn = useCallback(async (matchId: string, pos: { x: number; y: number }) => {
-    if (!playerIdentifier) return;
-    await fetch("/api/match/place", {
+  const placePawn = useCallback(async (matchId: string, pos: Position) => {
+    const res = await fetch("/api/match/place", {
       method: "POST",
-      body: JSON.stringify({ matchId, pos, playerIdentifier }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ matchId, pos }),
     });
-  }, [playerIdentifier]);
 
-  const move = useCallback(async (matchId: string, direction: string) => {
-    if (!playerIdentifier) return;
-    await fetch("/api/match/move", {
+    if (!res.ok) throw new Error("Placement failed");
+    return res.json() as Promise<{ match: Match }>;
+  }, []);
+
+  const move = useCallback(async (matchId: string, direction: Direction) => {
+    const res = await fetch("/api/match/move", {
       method: "POST",
-      body: JSON.stringify({ matchId, direction, playerIdentifier }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ matchId, direction }),
     });
-  }, [playerIdentifier]);
+
+    if (!res.ok) throw new Error("Move failed");
+    return res.json() as Promise<{ match: Match }>;
+  }, []);
 
   return {
     playerIdentifier,
-    createRoom,
     joinRoom,
     placePawn,
     move,

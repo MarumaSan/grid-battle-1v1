@@ -1,58 +1,38 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { isValidPlacement, getValidMoves } from "@/lib/gameLogic";
-import { Position } from "@/lib/types";
+import { Match, Position } from "@/lib/types";
 
 export async function POST(req: Request) {
   try {
-    const { matchId, pos, playerIdentifier } = (await req.json()) as { 
-      matchId: string; 
-      pos: Position;
-      playerIdentifier: string 
-    };
+    const { matchId, pos } = (await req.json()) as { matchId: string, pos: Position };
 
-    const { data: matchData, error: matchError } = await supabase
+    // 1. Get current match
+    const { data: match, error: fetchError } = await supabase
       .from("gb_matches")
       .select("*")
       .eq("id", matchId)
       .single();
 
-    if (matchError || !matchData) {
-      return NextResponse.json({ message: "Match not found" }, { status: 404 });
-    }
+    if (fetchError || !match) throw fetchError || new Error("Match not found");
+    
+    const matchData = match as Match;
 
-    const match = matchData as any;
+    // 2. Validate move
+    if (matchData.status !== "placing") throw new Error("Incorrect state");
 
-    if (match.alice_id !== playerIdentifier) {
-      return NextResponse.json({ message: "Only Alice can place the pawn" }, { status: 403 });
-    }
+    // 3. Mark cell as occupied
+    const newState = { ...matchData.state };
+    newState.pos = pos;
+    newState.removed[pos.x][pos.y] = true;
 
-    if (match.status !== "placing") {
-      return NextResponse.json({ message: "Not in placement phase" }, { status: 400 });
-    }
-
-    if (!isValidPlacement(match.state.grid, pos)) {
-      return NextResponse.json({ message: "Invalid placement" }, { status: 400 });
-    }
-
-    // Update match state
-    let status = "playing";
-    let winner = null;
-
-    // Check if Bob has any valid moves
-    const validMoves = getValidMoves(match.state.grid, match.state.removed, pos);
-    if (validMoves.length === 0) {
-      status = "finished";
-      winner = "Alice";
-    }
-
-    const { data: finalMatch, error: updateError } = await supabase
+    // 4. Update match
+    const { data: updatedMatch, error: updateError } = await supabase
       .from("gb_matches")
       .update({
-        state: { ...match.state, pos },
-        status,
-        currentPlayer: "Bob",
-        winner,
+        state: newState,
+        status: "playing",
+        current_player: "Bob", // Bob always goes after Alice places
+        move_count: 1,
       })
       .eq("id", matchId)
       .select()
@@ -60,9 +40,9 @@ export async function POST(req: Request) {
 
     if (updateError) throw updateError;
 
-    return NextResponse.json({ match: finalMatch });
-  } catch (error) {
-    console.error("[API Place Pawn]", error);
-    return NextResponse.json({ message: "Failed to place pawn" }, { status: 500 });
+    return NextResponse.json({ match: updatedMatch });
+  } catch (error: any) {
+    console.error("[API Match Place]", error);
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
