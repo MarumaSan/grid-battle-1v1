@@ -144,6 +144,22 @@ export default function HostPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Management Section */}
+                <div className="pt-8 border-t border-slate-100">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">การจัดการห้อง</h3>
+                  <button 
+                    onClick={async () => {
+                      if (confirm("คุณแน่ใจหรือไม่ว่าต้องการปิดห้องนี้และยุติการต่อสู้ทั้งหมด?")) {
+                        await supabase.from("gb_rooms").delete().eq("id", room.id);
+                        window.location.href = "/";
+                      }
+                    }}
+                    className="w-full py-4 bg-rose-50 text-rose-600 font-bold rounded-2xl border border-rose-100 hover:bg-rose-100 transition-all active:scale-95"
+                  >
+                    🚩 ปิดสมรภูมินี้
+                  </button>
+                </div>
               </div>
             </div>
           </aside>

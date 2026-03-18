@@ -217,6 +217,7 @@ export default function RoomPage() {
         winner={match.winner}
         onClose={() => router.push("/")}
         match={match}
+        currentRole={role}
       />
     </main>
   );
