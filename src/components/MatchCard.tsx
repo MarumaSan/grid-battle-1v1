@@ -1,95 +1,76 @@
 "use client";
 
-import React from "react";
-import type { Match } from "@/lib/types";
+import { Match } from "@/lib/types";
 
 interface MatchCardProps {
   match: Match;
 }
 
 export default function MatchCard({ match }: MatchCardProps) {
-  const statusColor =
-    match.status === "playing"
-      ? "text-green-400"
-      : match.status === "finished"
-      ? "text-yellow-400"
-      : match.status === "placing"
-      ? "text-cyan-400"
-      : "text-gray-400";
-
-  const statusBg =
-    match.status === "playing"
-      ? "bg-green-500/10 border-green-500/20"
-      : match.status === "finished"
-      ? "bg-yellow-500/10 border-yellow-500/20"
-      : match.status === "placing"
-      ? "bg-cyan-500/10 border-cyan-500/20"
-      : "bg-gray-500/10 border-gray-500/20";
+  const isWaiting = match.status === "waiting_for_opponent";
+  const isFinished = match.status === "finished";
 
   return (
-    <div className={`p-4 rounded-xl border backdrop-blur-sm ${statusBg}`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-white font-mono text-xs bg-white/10 px-2 py-1 rounded">
-          {match.matchId.slice(0, 6)}
-        </span>
-        <span className={`text-xs font-semibold uppercase ${statusColor}`}>
-          {match.status}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
-            A
-          </div>
-          <span className="text-gray-300 text-sm">Alice</span>
+    <div className={`bg-slate-900/60 p-5 rounded-3xl border transition-all duration-300 ${isFinished ? "border-slate-800" : "border-slate-700/50 hover:border-cyan-500/30"}`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex flex-col">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Battle Instance</span>
+          <span className="text-sm font-mono text-slate-300">ID: {match.id.slice(0, 8)}...</span>
         </div>
-        <span className="text-gray-500 text-xs">vs</span>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-300 text-sm">Bob</span>
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-xs font-bold text-white">
-            B
-          </div>
+        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+          isWaiting ? "bg-amber-500/10 text-amber-500" : 
+          isFinished ? "bg-slate-800 text-slate-500" : 
+          "bg-cyan-500/10 text-cyan-500"
+        }`}>
+          {match.status.replace("_", " ")}
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>s={match.s}</span>
-        <span>Moves: {match.moveCount}</span>
-        {match.winner && (
-          <span className="text-yellow-400 font-bold">
-            🏆 {match.winner} wins!
-          </span>
-        )}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <PlayerBadge name="Alice" isActive={match.currentPlayer === "Alice" && !isFinished} isWinner={match.winner === "Alice"} />
+        <PlayerBadge name={isWaiting ? "???" : "Bob"} isActive={match.currentPlayer === "Bob" && !isFinished} isWinner={match.winner === "Bob"} />
       </div>
 
-      {/* Mini grid preview */}
-      {match.grid.length <= 10 && (
-        <div className="mt-3 flex justify-center">
-          <div
-            className="inline-grid gap-px"
-            style={{ gridTemplateColumns: `repeat(${match.grid[0].length}, minmax(0, 1fr))` }}
-          >
-            {match.grid.map((row, i) =>
-              row.map((available, j) => {
-                const isPos = match.pos?.x === i && match.pos?.y === j;
-                const isDestroyed = match.removed[i][j];
-                let bg = "bg-slate-700/50";
-                if (!available) bg = "bg-gray-900/60";
-                if (isDestroyed) bg = "bg-red-900/40";
-                if (isPos) bg = "bg-cyan-400";
-
-                return (
-                  <div
-                    key={`${i}-${j}`}
-                    className={`w-2 h-2 rounded-sm ${bg}`}
-                  />
-                );
-              })
-            )}
-          </div>
+      <div className="flex items-center justify-between pt-4 border-t border-slate-800/50">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold text-slate-600 uppercase">Param S</span>
+          <span className="text-lg font-black text-cyan-400/80">{match.s}</span>
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-bold text-slate-600 uppercase">Total Moves</span>
+          <span className="text-lg font-black text-white">{match.move_count}</span>
+        </div>
+      </div>
+      
+      {!isWaiting && !isFinished && (
+        <div className="mt-4 w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 animate-pulse" 
+            style={{ width: `${(match.move_count % 10) * 10 || 10}%` }}
+          ></div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PlayerBadge({ name, isActive, isWinner }: { name: string, isActive: boolean, isWinner?: boolean }) {
+  return (
+    <div className={`p-3 rounded-2xl border transition-all ${
+      isWinner 
+        ? "bg-emerald-500/10 border-emerald-500/30 ring-1 ring-emerald-500/20" 
+        : isActive 
+          ? "bg-cyan-500/10 border-cyan-400/30" 
+          : "bg-slate-950/50 border-slate-800"
+    }`}>
+      <div className="text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
+        Player
+        {isWinner && <span className="text-emerald-500 text-[8px] font-black bg-emerald-500/10 px-1 rounded-sm">WINNER</span>}
+      </div>
+      <div className={`font-black tracking-tight flex items-center gap-2 ${isWinner ? "text-emerald-400" : isActive ? "text-cyan-400" : "text-slate-400"}`}>
+        {isActive && !isWinner && <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>}
+        {name}
+      </div>
     </div>
   );
 }

@@ -1,186 +1,141 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSocket } from "@/hooks/useSocket";
+import { useGameSync } from "@/hooks/useGameSync";
+import { Match, PlayerRole } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 import GameGrid from "@/components/GameGrid";
 import PlayerInfo from "@/components/PlayerInfo";
 import WaitingRoom from "@/components/WaitingRoom";
 import GameOverModal from "@/components/GameOverModal";
-import type { Match, PlayerRole, Position, Direction } from "@/lib/types";
 
 export default function RoomPage() {
-  const params = useParams();
+  const { slug } = useParams() as { slug: string };
   const router = useRouter();
-  const socket = useSocket();
-  const roomId = params.slug as string;
+  const { joinRoom, placePawn, move, playerIdentifier } = useGameSync();
 
-  const [status, setStatus] = useState<"connecting" | "waiting" | "playing" | "finished" | "error" | "closed">("connecting");
   const [match, setMatch] = useState<Match | null>(null);
   const [role, setRole] = useState<PlayerRole | null>(null);
-  const [winner, setWinner] = useState<PlayerRole | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // 1. Initial Join
   useEffect(() => {
-    if (!socket) return;
+    if (!playerIdentifier || !slug) return;
 
-    // Join the room
-    socket.emit("join-room", { roomId });
+    const init = async () => {
+      try {
+        const data = await joinRoom(slug);
+        if (data) {
+          setRole(data.role);
+          setMatch(data.match);
+        }
+      } catch (err) {
+        setError("Could not join room. It may be full or closed.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    socket.on("waiting-for-opponent", () => {
-      setStatus("waiting");
-    });
+    init();
+  }, [slug, joinRoom, playerIdentifier]);
 
-    socket.on("match-started", ({ match: m, role: r }) => {
-      setMatch(m);
-      setRole(r);
-      setStatus("playing");
-    });
+  // 2. Realtime sync
+  useEffect(() => {
+    if (!match?.id) return;
 
-    socket.on("match-updated", ({ match: m }) => {
-      setMatch(m);
-    });
-
-    socket.on("game-over", ({ winner: w, match: m }) => {
-      setMatch(m);
-      setWinner(w);
-      setStatus("finished");
-    });
-
-    socket.on("room-closed", () => {
-      setStatus("closed");
-    });
-
-    socket.on("error", ({ message }) => {
-      setErrorMsg(message);
-      setStatus("error");
-    });
+    const channel = supabase
+      .channel(`match:${match.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "gb_matches",
+          filter: `id=eq.${match.id}`,
+        },
+        (payload) => {
+          setMatch(payload.new as Match);
+        }
+      )
+      .subscribe();
 
     return () => {
-      socket.off("waiting-for-opponent");
-      socket.off("match-started");
-      socket.off("match-updated");
-      socket.off("game-over");
-      socket.off("room-closed");
-      socket.off("error");
+      supabase.removeChannel(channel);
     };
-  }, [socket, roomId]);
+  }, [match?.id]);
 
-  const handlePlacePawn = (pos: Position) => {
-    if (!socket || !match) return;
-    socket.emit("place-pawn", { matchId: match.matchId, pos });
+  const handleCellClick = (x: number, y: number) => {
+    if (!match || !role) return;
+
+    if (match.status === "placing" && role === "Alice") {
+      placePawn(match.id, { x, y });
+    }
   };
 
-  const handleMove = (direction: Direction) => {
-    if (!socket || !match) return;
-    socket.emit("move", { matchId: match.matchId, direction });
+  const handleMove = (direction: "up" | "down" | "left" | "right") => {
+    if (!match || !role) return;
+    move(match.id, direction);
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0a1a] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/8 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/8 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1.5s" }}
-        />
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(6,182,212,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.3) 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
-
-      <div className="relative z-10 w-full max-w-3xl flex flex-col items-center gap-6">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
-            Grid Battle 1v1
-          </h1>
-          <p className="text-gray-500 text-xs font-mono mt-1">Room: {roomId}</p>
-        </div>
-
-        {/* Connecting */}
-        {status === "connecting" && (
-          <div className="text-gray-400 animate-pulse">Connecting to room...</div>
-        )}
-
-        {/* Waiting */}
-        {status === "waiting" && <WaitingRoom />}
-
-        {/* Playing / Placing */}
-        {(status === "playing") && match && role && (
-          <>
-            <PlayerInfo
-              role={role}
-              currentPlayer={match.currentPlayer}
-              moveCount={match.moveCount}
-              status={match.status}
-            />
-            <GameGrid
-              match={match}
-              role={role}
-              onPlacePawn={handlePlacePawn}
-              onMove={handleMove}
-            />
-          </>
-        )}
-
-        {/* Game Over */}
-        {status === "finished" && winner && match && role && (
-          <>
-            <PlayerInfo
-              role={role}
-              currentPlayer={match.currentPlayer}
-              moveCount={match.moveCount}
-              status={match.status}
-            />
-            <GameGrid
-              match={match}
-              role={role}
-              onPlacePawn={handlePlacePawn}
-              onMove={handleMove}
-            />
-            <GameOverModal
-              winner={winner}
-              role={role}
-              moveCount={match.moveCount}
-              onClose={() => router.push("/")}
-            />
-          </>
-        )}
-
-        {/* Room Closed */}
-        {status === "closed" && (
-          <div className="text-center p-8 rounded-2xl bg-red-500/10 border border-red-500/20">
-            <div className="text-4xl mb-4">🚫</div>
-            <h2 className="text-white text-xl font-bold mb-2">Room Closed</h2>
-            <p className="text-gray-400 mb-4">The host has closed this room.</p>
-            <button
-              onClick={() => router.push("/")}
-              className="px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        )}
-
-        {/* Error */}
-        {status === "error" && (
-          <div className="text-center p-8 rounded-2xl bg-red-500/10 border border-red-500/20">
-            <div className="text-4xl mb-4">⚠️</div>
-            <h2 className="text-white text-xl font-bold mb-2">Error</h2>
-            <p className="text-red-300 mb-4">{errorMsg}</p>
-            <button
-              onClick={() => router.push("/")}
-              className="px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        )}
+  if (loading) return <WaitingRoom message="Connecting to arena..." />;
+  if (error) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+      <div className="bg-slate-900 border border-red-500/30 p-8 rounded-2xl text-center">
+        <h2 className="text-2xl font-bold text-red-400 mb-4">Error</h2>
+        <p className="text-slate-400 mb-6">{error}</p>
+        <button onClick={() => router.push("/")} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+          Back to Home
+        </button>
       </div>
     </div>
+  );
+
+  if (!match) return <WaitingRoom message="Initializing match..." />;
+
+  if (match.status === "waiting_for_opponent") {
+    return <WaitingRoom message="Waiting for an opponent to join..." />;
+  }
+
+  const isMyTurn = match.currentPlayer === role;
+
+  return (
+    <main className="min-h-screen bg-slate-950 text-white p-4 md:p-8 flex flex-col items-center">
+      <div className="w-full max-w-4xl flex flex-col gap-8">
+        <PlayerInfo 
+          role={role} 
+          currentPlayer={match.currentPlayer} 
+          moveCount={match.move_count} 
+        />
+
+        <div className="flex flex-col items-center gap-6">
+          <GameGrid
+            grid={match.state.grid}
+            removed={match.state.removed}
+            pos={match.state.pos}
+            onCellClick={handleCellClick}
+            onMove={handleMove}
+            isMyTurn={isMyTurn}
+            status={match.status}
+          />
+          
+          <div className="text-center text-slate-500 text-sm font-medium animate-pulse">
+            {match.status === "placing" 
+              ? (role === "Alice" ? "Choose your starting position" : "Alice is choosing starting position...")
+              : (isMyTurn ? "Your turn! Use arrow keys or click adjacent cells." : `Waiting for ${match.currentPlayer}...`)
+            }
+          </div>
+        </div>
+      </div>
+
+      <GameOverModal
+        isOpen={match.status === "finished"}
+        winner={match.winner!}
+        role={role}
+        moveCount={match.move_count}
+        onClose={() => router.push("/")}
+      />
+    </main>
   );
 }
