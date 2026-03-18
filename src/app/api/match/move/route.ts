@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { Match, Direction, PlayerRole } from "@/lib/types";
-import { getNextPosition, canMove } from "@/lib/gameLogic";
+import { Match, Direction, PlayerRole, MatchStatus } from "@/lib/types";
+import { getTargetPosition, canMove } from "@/lib/gameLogic";
 
 export async function POST(req: Request) {
   try {
@@ -23,9 +23,9 @@ export async function POST(req: Request) {
     if (!matchData.state.pos) throw new Error("No pawn on grid");
 
     // Calculate move
-    const nextPos = getNextPosition(matchData.state.pos, direction);
+    const nextPos = getTargetPosition(matchData.state.pos, direction);
     
-    // Check if move is valid (within grid, available cell, not already removed)
+    // Check if move is valid
     if (
       nextPos.x < 0 || nextPos.x >= matchData.state.grid.length ||
       nextPos.y < 0 || nextPos.y >= matchData.state.grid[0].length ||
@@ -43,12 +43,12 @@ export async function POST(req: Request) {
     const nextPlayer: PlayerRole = matchData.current_player === "Alice" ? "Bob" : "Alice";
     const canNextMove = canMove(nextPos, matchData.state.grid, newState.removed);
     
-    let nextStatus = matchData.status;
-    let winner = null;
+    let nextStatus: MatchStatus = matchData.status;
+    let winner: PlayerRole | null = null;
 
     if (!canNextMove) {
       nextStatus = "finished";
-      winner = matchData.current_player; // Current player wins if next player has no moves
+      winner = matchData.current_player; 
     }
 
     // 4. Update match

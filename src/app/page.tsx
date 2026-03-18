@@ -25,7 +25,7 @@ export default function HomePage() {
     try {
       const sList = sInput.split(",").map((s) => parseInt(s.trim())).filter((s) => !isNaN(s));
       const finalConfig = { ...config, sList };
-      const roomId = await createRoom(finalConfig);
+      const { roomId } = await createRoom(finalConfig);
       router.push(`/host/${roomId}`);
     } catch (err) {
       alert("Failed to create room");

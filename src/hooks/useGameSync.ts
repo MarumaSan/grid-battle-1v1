@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Match, Position, Direction, PlayerRole } from "@/lib/types";
+import { Match, Position, Direction, PlayerRole, RoomConfig } from "@/lib/types";
 import { nanoid } from "nanoid";
 
 export function useGameSync() {
@@ -14,6 +14,17 @@ export function useGameSync() {
       localStorage.setItem("gb_player_id", id);
     }
     setPlayerIdentifier(id);
+  }, []);
+
+  const createRoom = useCallback(async (config: RoomConfig) => {
+    const res = await fetch("/api/room/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ config }),
+    });
+
+    if (!res.ok) throw new Error("Failed to create room");
+    return res.json() as Promise<{ roomId: string }>;
   }, []);
 
   const joinRoom = useCallback(async (roomCode: string) => {
@@ -53,6 +64,7 @@ export function useGameSync() {
 
   return {
     playerIdentifier,
+    createRoom,
     joinRoom,
     placePawn,
     move,
