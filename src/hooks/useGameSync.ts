@@ -23,8 +23,11 @@ export function useGameSync() {
       body: JSON.stringify({ config }),
     });
 
-    if (!res.ok) throw new Error("Failed to create room");
-    return res.json() as Promise<{ roomId: string }>;
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to create room");
+    }
+    return data as { roomId: string };
   }, []);
 
   const joinRoom = useCallback(async (roomCode: string) => {
@@ -36,8 +39,11 @@ export function useGameSync() {
       body: JSON.stringify({ roomCode, playerIdentifier }),
     });
 
-    if (!res.ok) throw new Error("Join failed");
-    return res.json() as Promise<{ match: Match; role: PlayerRole }>;
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Join failed");
+    }
+    return data as { match: Match; role: PlayerRole };
   }, [playerIdentifier]);
 
   const placePawn = useCallback(async (matchId: string, pos: Position) => {
@@ -47,8 +53,11 @@ export function useGameSync() {
       body: JSON.stringify({ matchId, pos }),
     });
 
-    if (!res.ok) throw new Error("Placement failed");
-    return res.json() as Promise<{ match: Match }>;
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Placement failed");
+    }
+    return data as { match: Match };
   }, []);
 
   const move = useCallback(async (matchId: string, direction: Direction) => {
@@ -58,8 +67,11 @@ export function useGameSync() {
       body: JSON.stringify({ matchId, direction }),
     });
 
-    if (!res.ok) throw new Error("Move failed");
-    return res.json() as Promise<{ match: Match }>;
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Move failed");
+    }
+    return data as { match: Match };
   }, []);
 
   return {
