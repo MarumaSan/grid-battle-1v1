@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { Match, MatchState, PlayerRole, Room } from "@/lib/types";
+import { generateGrid } from "@/lib/gameLogic";
 
 export async function POST(req: Request) {
   try {
@@ -63,21 +64,19 @@ export async function POST(req: Request) {
 
     // 4. Create new match as Alice
     const s_value = roomData.config.sList[Math.floor(Math.random() * roomData.config.sList.length)];
+    const grid = generateGrid(
+      roomData.config.N,
+      roomData.config.M,
+      roomData.config.p,
+      roomData.config.q,
+      s_value
+    );
+
     const initialState: MatchState = {
-      grid: Array.from({ length: roomData.config.N }, () => Array(roomData.config.M).fill(true)),
+      grid,
       removed: Array.from({ length: roomData.config.N }, () => Array(roomData.config.M).fill(false)),
       pos: null,
     };
-
-    // Apply (p^i + q^j) % s == 0
-    for (let i = 0; i < roomData.config.N; i++) {
-      for (let j = 0; j < roomData.config.M; j++) {
-        const formulaValue = BigInt(Math.pow(roomData.config.p, i)) + BigInt(Math.pow(roomData.config.q, j));
-        if (formulaValue % BigInt(s_value) === 0n) {
-          initialState.grid[i][j] = false;
-        }
-      }
-    }
 
     const { data: newMatch, error: createError } = await supabase
       .from("gb_matches")

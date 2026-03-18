@@ -7,7 +7,7 @@ import { Direction, Position, PlayerRole } from "./types";
 /**
  * Generate the initial grid based on the formula:
  * Cell (i,j) is removed if (p^i + q^j) % s === 0
- * i,j are 1-indexed in the formula.
+ * i and j are 1-indexed in the formula (1..N, 1..M).
  */
 export function generateGrid(
   N: number,
@@ -21,8 +21,8 @@ export function generateGrid(
   const bigQ = BigInt(q);
   const bigS = BigInt(s);
 
-  // Precompute powers for efficiency
-  const powP: bigint[] = [1n];
+  // Precompute powers for efficiency (1-indexed)
+  const powP: bigint[] = [1n]; // powP[0] = 1 (unused for cell)
   for (let i = 1; i <= N; i++) powP.push(powP[i - 1] * bigP);
 
   const powQ: bigint[] = [1n];
@@ -31,7 +31,7 @@ export function generateGrid(
   for (let i = 0; i < N; i++) {
     const row: boolean[] = [];
     for (let j = 0; j < M; j++) {
-      // Offset by 1 for formula (1-indexed)
+      // Use 1-based indices for the formula (p^1 + q^1 for top-left)
       const val = powP[i + 1] + powQ[j + 1];
       row.push(val % bigS !== 0n);
     }
