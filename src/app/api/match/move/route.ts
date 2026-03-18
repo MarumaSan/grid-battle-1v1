@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const matchData = match as Match;
 
     // 2. Validate move
-    if (matchData.status !== "playing") throw new Error("Incorrect state");
+    if (matchData.status !== "playing") throw new Error("Incorrect state or game already finished");
     if (!matchData.state.pos) throw new Error("No pawn on grid");
 
     // Calculate move
@@ -32,23 +32,23 @@ export async function POST(req: Request) {
       !matchData.state.grid[nextPos.x][nextPos.y] ||
       matchData.state.removed[nextPos.x][nextPos.y]
     ) {
-      throw new Error("Invalid move");
+      throw new Error("Invalid move: target cell is blocked or out of bounds");
     }
 
     // 3. Execute move
     const newState = { ...matchData.state };
     newState.pos = nextPos;
-    newState.removed[nextPos.x][nextPos.y] = true;
+    newState.removed[nextPos.x][nextPos.y] = true; // Mark target cell as occupied/used
 
     const nextPlayer: PlayerRole = matchData.current_player === "Alice" ? "Bob" : "Alice";
     const canNextMove = canMove(nextPos, matchData.state.grid, newState.removed);
     
-    let nextStatus: MatchStatus = matchData.status;
+    let nextStatus: MatchStatus = "playing";
     let winner: PlayerRole | null = null;
 
     if (!canNextMove) {
       nextStatus = "finished";
-      winner = matchData.current_player; 
+      winner = matchData.current_player; // Whoever made the last valid move wins
     }
 
     // 4. Update match

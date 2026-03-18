@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { Match, Position } from "@/lib/types";
-import { isValidPlacement } from "@/lib/gameLogic";
+import { Match, Position, MatchStatus, PlayerRole } from "@/lib/types";
+import { isValidPlacement, canMove } from "@/lib/gameLogic";
 
 export async function POST(req: Request) {
   try {
@@ -18,26 +18,36 @@ export async function POST(req: Request) {
     
     const matchData = match as Match;
 
-    // 2. Validate move
+    // 2. Validate state
     if (matchData.status !== "placing") throw new Error("Incorrect state");
-    
-    // Check if placement is valid (on an available cell)
     if (!isValidPlacement(matchData.state.grid, pos)) {
       throw new Error("Invalid placement: cell is not available");
     }
 
-    // 3. Mark cell as occupied
+    // 3. Update state
     const newState = { ...matchData.state };
     newState.pos = pos;
-    newState.removed[pos.x][pos.y] = true;
+    newState.removed[pos.x][pos.y] = true; // Mark starting cell as used
 
-    // 4. Update match
+    // Check if next player (Bob) can move from this position
+    const canBobMove = canMove(pos, matchData.state.grid, newState.removed);
+    
+    let nextStatus: MatchStatus = "playing";
+    let winner: PlayerRole | null = null;
+
+    if (!canBobMove) {
+      nextStatus = "finished";
+      winner = "Alice"; // Alice placed it, Bob has no moves -> Alice wins
+    }
+
+    // 4. Persistence
     const { data: updatedMatch, error: updateError } = await supabase
       .from("gb_matches")
       .update({
         state: newState,
-        status: "playing",
-        current_player: "Bob", // Bob always goes after Alice places
+        status: nextStatus,
+        winner: winner,
+        current_player: "Bob", 
         move_count: 1,
       })
       .eq("id", matchId)
