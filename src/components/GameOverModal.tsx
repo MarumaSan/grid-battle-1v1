@@ -71,7 +71,7 @@ export default function GameOverModal({ isOpen, winner, onClose, match, currentR
             onClick={onClose}
             className="w-full h-16 bg-slate-900 hover:bg-black text-white font-bold text-xl rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            กลับสู่หน้าหลัก
+            {currentRole === "Observer" ? "กลับสู่แผงควบคุม" : "กลับสู่หน้าหลัก"}
           </button>
         </div>
       </div>
