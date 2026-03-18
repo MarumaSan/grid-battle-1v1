@@ -48,6 +48,25 @@ export default function RoomPage() {
           setMatch(updated);
         }
       )
+      .on("broadcast", { event: "move" }, (payload) => {
+        // High-speed update from opponent's broadcast
+        const { matchState, nextPlayer } = payload.payload;
+        setMatch(prev => prev ? {
+          ...prev,
+          state: matchState,
+          current_player: nextPlayer
+        } : null);
+      })
+      .subscribe();
+roadcast", { event: "move" }, (payload) => {
+        // High-speed update from opponent's broadcast
+        const { matchState, nextPlayer } = payload.payload;
+        setMatch(prev => prev ? {
+          ...prev,
+          state: matchState,
+          current_player: nextPlayer
+        } : null);
+      })
       .subscribe();
 
     return () => { channel.unsubscribe(); };
