@@ -69,14 +69,13 @@ export default function GameGrid({
     }
   };
 
-  // Calculate cell size based on grid dimensions
   const maxDim = Math.max(grid.length, grid[0].length);
-  const cellSize = maxDim <= 8 ? "w-14 h-14" : maxDim <= 12 ? "w-10 h-10" : maxDim <= 20 ? "w-8 h-8" : "w-6 h-6";
+  const cellSize = maxDim <= 8 ? "w-16 h-16" : maxDim <= 12 ? "w-12 h-12" : maxDim <= 20 ? "w-9 h-9" : "w-7 h-7";
   const fontSize = maxDim <= 8 ? "text-xl" : maxDim <= 12 ? "text-base" : "text-xs";
 
   return (
     <div
-      className="inline-grid gap-1.5 p-4 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-slate-800 shadow-2xl"
+      className="inline-grid gap-2 p-6 rounded-[2.5rem] bg-white shadow-[0_20px_50px_rgba(99,102,241,0.1)] border border-slate-100"
       style={{ gridTemplateColumns: `repeat(${grid[0].length}, minmax(0, 1fr))` }}
     >
       {grid.map((row, i) =>
@@ -86,18 +85,18 @@ export default function GameGrid({
           const isRemovedByFormula = !available;
           const isValidTarget = validTargets.some((t) => t.x === i && t.y === j);
           
-          let cellClass = `${cellSize} rounded-xl flex items-center justify-center transition-all duration-300 ${fontSize} select-none relative group `;
+          let cellClass = `${cellSize} rounded-2xl flex items-center justify-center transition-all duration-300 ${fontSize} select-none relative group `;
 
           if (isCurrentPos) {
-            cellClass += "bg-gradient-to-br from-cyan-400 to-indigo-500 shadow-[0_0_20px_rgba(34,211,238,0.4)] scale-110 z-10 ring-2 ring-cyan-300 ";
+            cellClass += "bg-gradient-to-br from-indigo-500 to-violet-600 shadow-[0_8px_20px_rgba(99,102,241,0.4)] scale-110 z-10 ring-4 ring-white ";
           } else if (isDestroyed) {
-            cellClass += "bg-slate-950/80 border border-slate-900 scale-90 opacity-40 ";
+            cellClass += "bg-slate-50 border border-slate-100 scale-90 opacity-40 ";
           } else if (isRemovedByFormula) {
-            cellClass += "bg-slate-950/20 border border-slate-900/50 opacity-20 ";
+            cellClass += "bg-slate-100/30 border border-slate-50 opacity-20 ";
           } else if (isValidTarget) {
-            cellClass += "bg-cyan-500/10 border-2 border-cyan-500/40 cursor-pointer hover:bg-cyan-500/30 hover:scale-105 animate-pulse ";
+            cellClass += "bg-cyan-50 border-2 border-cyan-400 cursor-pointer hover:bg-cyan-100 animate-pulse ";
           } else {
-            cellClass += "bg-slate-800/40 border border-slate-700/30 hover:bg-slate-700/50 ";
+            cellClass += "bg-white border border-slate-200/60 hover:border-indigo-200 hover:bg-slate-50/50 ";
           }
 
           return (
@@ -108,20 +107,15 @@ export default function GameGrid({
             >
               {isCurrentPos ? (
                 <div className="w-full h-full flex items-center justify-center animate-bounce">
-                  <div className="w-3/5 h-3/5 bg-white rounded-full shadow-lg" />
+                  <div className="w-4 h-4 bg-white rounded-full shadow-lg" />
                 </div>
               ) : isRemovedByFormula ? (
-                <div className="w-1 h-1 bg-slate-700 rounded-full" />
+                <div className="text-slate-300 font-bold opacity-30 text-[10px]">#</div>
               ) : isDestroyed ? (
-                <div className="text-red-500/50 text-xs">✕</div>
+                <div className="text-rose-400 text-xs font-black">✕</div>
               ) : isValidTarget ? (
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
+                <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
               ) : null}
-              
-              {/* Hover effect for empty cells */}
-              {!isCurrentPos && !isDestroyed && !isRemovedByFormula && !isValidTarget && (
-                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
-              )}
             </div>
           );
         })

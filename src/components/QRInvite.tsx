@@ -1,111 +1,50 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import QRCode from "qrcode";
+import { useEffect, useState } from "react";
 
 interface QRInviteProps {
   roomCode: string;
 }
 
 export default function QRInvite({ roomCode }: QRInviteProps) {
-  const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [copied, setCopied] = useState(false);
-
-  const roomUrl = typeof window !== "undefined" 
-    ? `${window.location.origin}/room/${roomCode}` 
-    : `/room/${roomCode}`;
+  const [qr, setQr] = useState<string>("");
 
   useEffect(() => {
-    QRCode.toDataURL(roomUrl, {
-      width: 200,
+    const url = `${window.location.origin}/room/${roomCode}`;
+    QRCode.toDataURL(url, {
+      width: 400,
       margin: 2,
       color: {
-        dark: "#22d3ee", // cyan-400
-        light: "#00000000", // transparent
-      },
-    }).then(setQrDataUrl);
-  }, [roomUrl]);
-
-  const copyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(roomCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback
-      const el = document.createElement("textarea");
-      el.value = roomCode;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(roomUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {}
-  };
+        dark: "#1e1b4b", // Indigo 950
+        light: "#ffffff"
+      }
+    }).then(setQr);
+  }, [roomCode]);
 
   return (
-    <div className="flex flex-col items-center gap-6 p-8 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-slate-800 shadow-2xl">
-      <div className="text-center">
-        <h3 className="text-white text-lg font-black uppercase tracking-widest mb-1">
-          Invite Players
-        </h3>
-        <p className="text-slate-500 text-xs font-medium">Scan QR or share the code below</p>
+    <div className="flex flex-col items-center">
+      <div className="mb-8 p-4 bg-white rounded-3xl shadow-xl shadow-indigo-100/50 border border-slate-100">
+        {qr ? (
+          <img src={qr} alt="QR Code" className="w-52 h-52 object-contain" />
+        ) : (
+          <div className="w-52 h-52 bg-slate-100 animate-pulse rounded-2xl" />
+        )}
       </div>
-
-      {/* QR Code */}
-      <div className="relative group">
-        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
-        <div className="relative p-4 rounded-2xl bg-slate-950 border border-slate-800">
-          {qrDataUrl ? (
-            <img src={qrDataUrl} alt="Room QR Code" className="w-[160px] h-[160px] block" />
-          ) : (
-            <div className="w-[160px] h-[160px] bg-slate-900 animate-pulse rounded-lg" />
-          )}
-        </div>
-      </div>
-
-      {/* Room Code */}
-      <div className="w-full space-y-3">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Room Code</label>
-          <button
-            onClick={copyCode}
-            className="w-full px-6 py-4 rounded-2xl bg-slate-950 border border-slate-800 text-cyan-400 font-mono font-black text-3xl tracking-[0.3em] hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all active:scale-95 group relative overflow-hidden"
-          >
-            <span className="relative z-10">{roomCode}</span>
-            <div className="absolute inset-0 bg-cyan-500/0 group-hover:bg-cyan-500/5 transition-colors" />
-          </button>
-        </div>
-
-        {/* Copy Link */}
-        <button
-          onClick={copyLink}
-          className="w-full py-3 rounded-xl bg-slate-800/50 text-slate-300 text-sm font-bold hover:bg-slate-700/50 transition-all border border-slate-700/50 flex items-center justify-center gap-2 group active:scale-95"
+      <div className="space-y-4 text-center">
+        <h4 className="text-lg font-bold text-slate-800">เชิญเพื่อนเข้าสู่สนาม</h4>
+        <p className="text-sm text-slate-500 leading-relaxed max-w-[240px]">
+          สแกนคิวอาร์โค้ดนี้ หรือระบุรหัส <span className="text-indigo-600 font-black">{roomCode}</span> เพื่อเริ่มการท้าทาย
+        </p>
+        <button 
+          onClick={() => {
+            navigator.clipboard.writeText(roomCode);
+            alert("คัดลอกรหัสห้องแล้ว!");
+          }}
+          className="px-6 py-2 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-100 hover:bg-indigo-100 transition-all"
         >
-          {copied ? (
-            <span className="text-emerald-400 flex items-center gap-2 animate-fadeIn">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-              Copied!
-            </span>
-          ) : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-500 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-              </svg>
-              Copy Invite Link
-            </>
-          )}
+          คัดลอกรหัสห้อง
         </button>
       </div>
     </div>

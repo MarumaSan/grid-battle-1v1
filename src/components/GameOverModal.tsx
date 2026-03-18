@@ -1,95 +1,63 @@
 "use client";
 
 import React from "react";
-import type { PlayerRole } from "@/lib/types";
+import { PlayerRole, Match } from "@/lib/types";
 
 interface GameOverModalProps {
   isOpen: boolean;
-  winner: PlayerRole;
-  role: PlayerRole;
-  moveCount: number;
+  winner: PlayerRole | null;
   onClose: () => void;
+  match: Match;
 }
 
-export default function GameOverModal({ isOpen, winner, role, moveCount, onClose }: GameOverModalProps) {
+export default function GameOverModal({ isOpen, winner, onClose, match }: GameOverModalProps) {
   if (!isOpen) return null;
 
-  const isWinner = winner === role;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fadeIn p-4">
-      <div className={`relative p-10 rounded-[2.5rem] border-2 max-w-md w-full ${
-        isWinner
-          ? "bg-gradient-to-br from-emerald-950/90 to-slate-950/90 border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.2)]"
-          : "bg-gradient-to-br from-rose-950/90 to-slate-950/90 border-rose-500/50 shadow-[0_0_50px_rgba(244,63,94,0.2)]"
-      } backdrop-blur-2xl animate-scaleIn`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-0">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose} />
+      
+      <div className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 animate-fadeIn">
         
-        {/* Animated Background Elements for Winner */}
-        {isWinner && (
-          <div className="absolute inset-0 overflow-hidden rounded-[2.5rem] pointer-events-none">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 rounded-full animate-confetti"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `-5%`,
-                  backgroundColor: ["#22d3ee", "#818cf8", "#fbbf24", "#34d399", "#f472b6"][i % 5],
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${3 + Math.random() * 2}s`,
-                }}
-              />
-            ))}
+        {/* Header with Winner Banner */}
+        <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 p-12 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="absolute -top-10 -left-10 w-40 h-40 bg-white rounded-full blur-3xl" />
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl" />
           </div>
-        )}
+          
+          <div className="text-7xl mb-6 transform hover:scale-110 transition-transform cursor-default">🏆</div>
+          <h2 className="text-4xl font-black text-white tracking-tighter mb-2">จบการต่อสู้!</h2>
+          <p className="text-indigo-100 text-lg opacity-80 uppercase tracking-widest font-bold">ผู้ชนะการประลอง</p>
+        </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center gap-6 text-center">
-          <div className="relative">
-            <div className={`text-7xl mb-2 ${isWinner ? "animate-bounce" : "animate-pulse"}`}>
-              {isWinner ? "🏆" : "💀"}
-            </div>
-            {isWinner && (
-              <div className="absolute -inset-4 bg-emerald-500/20 blur-2xl rounded-full -z-10 animate-pulse" />
-            )}
+        <div className="p-10 pt-12 text-center bg-white">
+          <div className="inline-block px-10 py-5 bg-indigo-50 rounded-3xl border-2 border-indigo-100 mb-10">
+            <p className="text-5xl font-black text-indigo-600 tracking-tighter leading-none">
+              ผู้เล่น {winner}
+            </p>
           </div>
 
-          <div>
-            <h2 className={`text-4xl font-black tracking-tighter mb-2 ${
-              isWinner ? "text-emerald-400" : "text-rose-400"
-            }`}>
-              {isWinner ? "VICTORY" : "DEFEAT"}
-            </h2>
-            <div className="h-1 w-12 bg-slate-800 rounded-full mx-auto" />
-          </div>
-
-          <p className="text-slate-300 font-medium leading-relaxed">
-            {isWinner
-              ? `Tremendous strategy! You've conquered the grid as ${role}.`
-              : `A valiant effort, but ${winner} has outmaneuvered you this time.`}
-          </p>
-
-          <div className="w-full grid grid-cols-2 gap-4 my-2">
-            <div className="bg-slate-900/50 py-3 rounded-2xl border border-slate-800">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Moves</div>
-              <div className="text-xl font-black text-white">{moveCount}</div>
+          <div className="grid grid-cols-2 gap-4 mb-10">
+            <div className="p-4 bg-slate-50 rounded-2xl">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">จำนวนตาที่เดิน</p>
+              <p className="text-2xl font-black text-slate-800">{match.move_count}</p>
             </div>
-            <div className="bg-slate-900/50 py-3 rounded-2xl border border-slate-800">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Winner</div>
-              <div className="text-xl font-black text-white">{winner.charAt(0)}</div>
+            <div className="p-4 bg-slate-50 rounded-2xl">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">รหัสสมรภูมิ</p>
+              <p className="text-2xl font-black text-slate-800">{match.s_value}</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className={`w-full py-4 rounded-2xl font-black text-lg tracking-wide transition-all active:scale-95 shadow-lg ${
-              isWinner
-                ? "bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20"
-                : "bg-rose-600 text-white hover:bg-rose-500 shadow-rose-600/20"
-            }`}
+            className="w-full h-16 bg-slate-900 hover:bg-black text-white font-bold text-xl rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            EXIT TO LOBBY
+            กลับสู่หน้าหลัก
           </button>
+          
+          <p className="mt-6 text-slate-400 text-sm font-medium">ขอบคุณที่ร่วมพิชิตตารางไปกับเรา!</p>
         </div>
       </div>
     </div>

@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Room, Match } from "@/lib/types";
-import QRInvite from "@/components/QRInvite";
 import MatchCard from "@/components/MatchCard";
+import QRInvite from "@/components/QRInvite";
+import { useParams } from "next/navigation";
 
 export default function HostPage() {
   const { slug } = useParams() as { slug: string };
-  const router = useRouter();
-  
   const [room, setRoom] = useState<Room | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,155 +16,140 @@ export default function HostPage() {
   useEffect(() => {
     if (!slug) return;
 
-    const fetchRoom = async () => {
-      const { data: roomData, error } = await supabase
+    const fetchRoomData = async () => {
+      // 1. Fetch Room
+      const { data: roomData, error: roomError } = await supabase
         .from("gb_rooms")
         .select("*")
         .eq("room_code", slug)
         .single();
-
-      if (error || !roomData) {
-        console.error("Room fetch error:", error);
+      
+      if (roomError) {
+        console.error("Room fetch error:", roomError);
         return;
       }
-
       setRoom(roomData as Room);
-      
-      // Fetch initial matches
-      const { data: matchesData } = await supabase
+
+      // 2. Fetch Matches
+      const { data: matchData, error: matchError } = await supabase
         .from("gb_matches")
         .select("*")
         .eq("room_id", roomData.id)
         .order("created_at", { ascending: false });
 
-      if (matchesData) setMatches(matchesData as Match[]);
+      if (!matchError) setMatches(matchData as Match[]);
       setLoading(false);
     };
 
-    fetchRoom();
+    fetchRoomData();
 
-    // Subscribe to new/updated matches for THIS room
-    if (!room?.id) return;
-    
+    // 3. Realtime Subscription
     const channel = supabase
-      .channel(`room:${room.id}`)
+      .channel(`room-${slug}`)
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "gb_matches",
-          filter: `room_id=eq.${room.id}`,
-        },
+        { event: "*", schema: "public", table: "gb_matches" },
         (payload) => {
-          if (payload.eventType === "INSERT") {
-            setMatches(prev => [payload.new as Match, ...prev]);
-          } else if (payload.eventType === "UPDATE") {
-            setMatches(prev => prev.map(m => m.id === payload.new.id ? (payload.new as Match) : m));
-          }
+          setMatches((prev) => {
+            const updated = payload.new as Match;
+            const index = prev.findIndex(m => m.id === updated.id);
+            if (index === -1) return [updated, ...prev];
+            const next = [...prev];
+            next[index] = updated;
+            return next;
+          });
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [slug, room?.id]);
+    return () => { channel.unsubscribe(); };
+  }, [slug]);
 
-  const handleCloseRoom = async () => {
-    if (!room) return;
-    await supabase.from("gb_rooms").update({ status: "closed" }).eq("id", room.id);
-    router.push("/");
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading Dashboard...</div>;
-  if (!room) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Room not found</div>;
-
-  const activeMatches = matches.filter(m => m.status !== "finished");
-  const finishedMatches = matches.filter(m => m.status === "finished");
+  if (!room) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600">
+        ไม่พบข้อมูลห้อง โปรดลองใหม่อีกครั้ง
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/50 p-6 rounded-3xl border border-slate-800 backdrop-blur-xl">
-          <div>
-            <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
-              Host Dashboard
-            </h1>
-            <p className="text-slate-400 font-medium mt-1">
-              Room: <span className="text-white font-bold">{room.room_code}</span> • {matches.length} matches total
-            </p>
+    <main className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans">
+      <div className="max-w-7xl mx-auto space-y-12 animate-fadeIn">
+        
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-12 border-b border-slate-200">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-black text-slate-800 tracking-tighter">แผงควบคุมสนามรบ</h1>
+            <p className="text-slate-500 text-lg font-medium">จัดการและติดตามสถานะการต่อสู้ในห้องของคุณ</p>
           </div>
-          <button
-            onClick={handleCloseRoom}
-            className="px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl font-bold border border-red-500/20 transition-all active:scale-95"
-          >
-            Close Room
-          </button>
-        </div>
+          <div className="flex items-center gap-4 bg-white px-8 py-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight">รหัสห้องถาวร</p>
+              <p className="text-4xl font-black text-blue-600 tracking-tighter">{room.room_code}</p>
+            </div>
+          </div>
+        </header>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left: Stats & Invite */}
-          <div className="space-y-8">
-            <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 backdrop-blur-xl">
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
-                Room Configuration
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <StatCard label="Grid Size" value={`${room.config.N}x${room.config.M}`} />
-                <StatCard label="Params" value={`p=${room.config.p}, q=${room.config.q}`} />
-                <StatCard label="S Values" value={room.config.sList.join(", ")} />
-                <StatCard label="Status" value={room.status} highlight={room.status === "active"} />
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+          
+          {/* Main Dashboard: Matches */}
+          <section className="lg:col-span-3 space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-slate-800">การต่อสู้ทั้งหมด ({matches.length})</h2>
+              <div className="h-1 flex-1 mx-6 bg-slate-200 rounded-full" />
             </div>
 
-            <QRInvite roomCode={room.room_code} />
-          </div>
-
-          {/* Right: Active Matches */}
-          <div className="lg:col-span-2 space-y-8">
-            <section>
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-3">
-                Ongoing Battles
-                <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-full">{activeMatches.length}</span>
-              </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {activeMatches.map(match => (
-                  <MatchCard key={match.id} match={match} />
+            {matches.length === 0 ? (
+              <div className="bg-white rounded-[2rem] p-16 text-center border-2 border-dashed border-slate-200">
+                <div className="text-6xl mb-6">🏜️</div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">ยังไม่มีการต่อสู้เกิดขึ้น</h3>
+                <p className="text-slate-500">แชร์รหัสห้องด้านขวากับเพื่อนๆ เพื่อเริ่มการประลอง!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {matches.map((match) => (
+                  <MatchCard key={match.id} match={match} roomCode={room.room_code} />
                 ))}
-                {activeMatches.length === 0 && (
-                  <div className="col-span-full py-12 text-center bg-slate-900/30 rounded-3xl border border-dashed border-slate-800 text-slate-500">
-                    Waiting for players to initiate battles...
+              </div>
+            )}
+          </section>
+
+          {/* Sidebar: Invite & Info */}
+          <aside className="space-y-8">
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 sticky top-12">
+              <h2 className="text-xl font-bold text-slate-800 mb-8 border-b border-slate-100 pb-4">เปิดรับคำขอท้าทาย</h2>
+              
+              <div className="space-y-8">
+                <QRInvite roomCode={room.room_code} />
+                
+                <div className="pt-8 border-t border-slate-100">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">การกำหนดค่า</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">ขนาดตาราง</span>
+                      <span className="font-bold text-slate-800">{room.config.N} x {room.config.M}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">ค่าคงที่ (p, q)</span>
+                      <span className="font-bold text-slate-800">{room.config.p}, {room.config.q}</span>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-3 text-slate-400">
-                Battle History
-                <span className="text-xs bg-slate-800 text-slate-500 px-2 py-1 rounded-full">{finishedMatches.length}</span>
-              </h2>
-              <div className="grid md:grid-cols-2 gap-4 opacity-75">
-                {finishedMatches.map(match => (
-                  <MatchCard key={match.id} match={match} />
-                ))}
-              </div>
-            </section>
-          </div>
+            </div>
+          </aside>
         </div>
+
       </div>
     </main>
-  );
-}
-
-function StatCard({ label, value, highlight }: { label: string, value: string, highlight?: boolean }) {
-  return (
-    <div className="p-4 bg-slate-950/50 rounded-2xl border border-slate-800/50">
-      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</div>
-      <div className={`text-lg font-black ${highlight ? "text-cyan-400" : "text-white"}`}>{value}</div>
-    </div>
   );
 }

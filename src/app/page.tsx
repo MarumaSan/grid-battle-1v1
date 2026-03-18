@@ -5,19 +5,13 @@ import { useRouter } from "next/navigation";
 import { useGameSync } from "@/hooks/useGameSync";
 import { RoomConfig } from "@/lib/types";
 
-export default function HomePage() {
+export default function Home() {
   const router = useRouter();
   const { createRoom } = useGameSync();
-  const [roomCode, setRoomCode] = useState("");
-  const [config, setConfig] = useState<RoomConfig>({
-    N: 5,
-    M: 5,
-    p: 2,
-    q: 3,
-    sList: [2, 3, 5],
-  });
-  const [sInput, setSInput] = useState("2, 3, 5");
   const [loading, setLoading] = useState(false);
+  const [roomCode, setRoomCode] = useState("");
+  const [config, setConfig] = useState<RoomConfig>({ N: 5, M: 5, p: 2, q: 3, sList: [3, 5, 7] });
+  const [sInput, setSInput] = useState("3, 5, 7");
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +22,7 @@ export default function HomePage() {
       const { roomId } = await createRoom(finalConfig);
       router.push(`/host/${roomId}`);
     } catch (err: any) {
-      alert(`Failed to create room: ${err.message}`);
+      alert(`ล้มเหลวในการสร้างห้อง: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -42,148 +36,120 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
-      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-      
-      <header className="mb-12 text-center animate-fadeIn">
-        <h1 className="text-6xl font-black mb-2 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
-          GRID BATTLE 1v1
-        </h1>
-        <p className="text-slate-400 font-medium">Strategic Territory Conquest</p>
-      </header>
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 font-sans">
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch animate-fadeIn">
+        
+        {/* Left Side: Create Room */}
+        <section className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 flex flex-col">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              สร้างการต่อสู้
+            </h1>
+            <p className="text-slate-500 text-lg">กำหนดค่าสมรภูมิและเริ่มเกมใหม่</p>
+          </div>
 
-      <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl animate-fadeInDelay">
-        {/* Create Room */}
-        <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl hover:border-purple-500/50 transition-all duration-500 group">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
-            <span className="p-2 bg-purple-500/20 rounded-lg text-purple-400 group-hover:scale-110 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </span>
-            Create New Room
-          </h2>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <form onSubmit={handleCreate} className="space-y-6 flex-1">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Grid Size (N x M)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={config.N}
-                    onChange={(e) => setConfig({ ...config, N: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-                    placeholder="N"
-                    required
-                  />
-                  <input
-                    type="number"
-                    value={config.M}
-                    onChange={(e) => setConfig({ ...config, M: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-                    placeholder="M"
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">แถว (N)</label>
+                <input
+                  type="number"
+                  value={config.N}
+                  onChange={(e) => setConfig({ ...config, N: parseInt(e.target.value) })}
+                  className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 focus:border-blue-500 focus:outline-none transition-all text-lg font-medium"
+                />
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Parameters (p, q)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={config.p}
-                    onChange={(e) => setConfig({ ...config, p: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-                    placeholder="p"
-                    required
-                  />
-                  <input
-                    type="number"
-                    value={config.q}
-                    onChange={(e) => setConfig({ ...config, q: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-                    placeholder="q"
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">คอลัมน์ (M)</label>
+                <input
+                  type="number"
+                  value={config.M}
+                  onChange={(e) => setConfig({ ...config, M: parseInt(e.target.value) })}
+                  className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 focus:border-blue-500 focus:outline-none transition-all text-lg font-medium"
+                />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">S Values (comma separated)</label>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">ค่า p</label>
+                <input
+                  type="number"
+                  value={config.p}
+                  onChange={(e) => setConfig({ ...config, p: parseInt(e.target.value) })}
+                  className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 focus:border-blue-500 focus:outline-none transition-all text-lg font-medium"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">ค่า q</label>
+                <input
+                  type="number"
+                  value={config.q}
+                  onChange={(e) => setConfig({ ...config, q: parseInt(e.target.value) })}
+                  className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 focus:border-blue-500 focus:outline-none transition-all text-lg font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 ml-1">รายการค่า s (คั่นด้วยคอมมา)</label>
               <input
                 type="text"
                 value={sInput}
                 onChange={(e) => setSInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-                placeholder="e.g. 2, 3, 5"
-                required
+                className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 focus:border-blue-500 focus:outline-none transition-all text-lg font-medium"
+                placeholder="3, 5, 7"
               />
             </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-900/20 transform active:scale-95 transition-all flex items-center justify-center gap-2 group"
+              className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl rounded-2xl shadow-lg shadow-blue-200 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 mt-4"
             >
-              {loading ? (
-                <span className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  Start Hosting
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </>
-              )}
+              {loading ? "กำลังสร้าง..." : "สร้างห้องใหม่"}
             </button>
           </form>
-        </div>
+        </section>
 
-        {/* Join Room */}
-        <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl hover:border-cyan-500/50 transition-all duration-500 group flex flex-col justify-center">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
-            <span className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 group-hover:scale-110 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-            </span>
-            Join Battle
-          </h2>
-          <form onSubmit={handleJoin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Enter Room Code</label>
+        {/* Right Side: Join Room */}
+        <section className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] p-8 shadow-xl flex flex-col text-white">
+          <div className="mb-8">
+            <h2 className="text-4xl font-bold mb-2">เข้าร่วมสมรภูมิ</h2>
+            <p className="text-indigo-100 text-lg opacity-80">ระบุรหัสห้องเพื่อเริ่มการต่อสู้ 1v1</p>
+          </div>
+
+          <form onSubmit={handleJoin} className="space-y-6 flex-1 flex flex-col justify-center">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-indigo-100 ml-1">รหัสห้อง (Room Code)</label>
               <input
                 type="text"
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-4 text-center text-3xl font-black tracking-widest text-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all uppercase"
-                placeholder="X7Y2Z9"
-                maxLength={8}
-                required
+                placeholder="ป้อนรหัส 6 หลัก"
+                className="w-full h-20 bg-white/10 border-2 border-white/20 rounded-3xl px-6 text-3xl font-bold tracking-widest placeholder:text-white/30 placeholder:text-xl placeholder:font-normal focus:bg-white/20 focus:outline-none transition-all text-center uppercase"
               />
             </div>
+
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-900/20 transform active:scale-95 transition-all flex items-center justify-center gap-2 group"
+              className="w-full h-16 bg-white text-indigo-700 font-bold text-xl rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] mt-4"
             >
-              Enter Arena
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              เข้าสู่สนามรบ
             </button>
           </form>
           
-          <div className="mt-8 text-center">
-            <p className="text-slate-500 text-sm">Waiting for an invite? Join a public room if available.</p>
+          <div className="mt-8 p-6 bg-white/5 rounded-3xl border border-white/10 hidden md:block">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-200 mb-2">กฎการเล่นเบื้องต้น</h3>
+            <p className="text-sm text-indigo-100/70 leading-relaxed">
+              สลับกันเดินเบี้ยในสมรภูมิที่ถูกลบไปบางส่วนตามสูตรคณิตศาสตร์ ใครไม่สามารถเดินเบี้ยได้ต่อไปเป็นผู้แพ้
+            </p>
           </div>
-        </div>
+        </section>
       </div>
-      
-      <footer className="mt-16 text-slate-600 text-xs font-medium tracking-widest uppercase flex items-center gap-8">
-        <span>Real-time Multiplayer</span>
-        <span className="w-1 h-1 bg-slate-800 rounded-full"></span>
-        <span>Secure Matches</span>
-        <span className="w-1 h-1 bg-slate-800 rounded-full"></span>
-        <span>Zero Lag</span>
+
+      <footer className="mt-12 text-slate-400 text-sm font-medium">
+        © 2024 Grid Battle 1v1 • พัฒนาโดย Antigravity
       </footer>
     </main>
   );

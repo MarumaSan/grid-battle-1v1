@@ -4,52 +4,29 @@ import React from "react";
 
 interface WaitingRoomProps {
   message?: string;
-  description?: string;
 }
 
-export default function WaitingRoom({ 
-  message = "Waiting for opponent...", 
-  description = "Another player needs to join the room" 
-}: WaitingRoomProps) {
+export default function WaitingRoom({ message = "กำลังรอคู่ต่อสู้เข้าร่วม..." }: WaitingRoomProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-16">
-      {/* Animated grid */}
-      <div className="relative w-24 h-24">
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-1">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-cyan-500/30 rounded-md animate-pulse"
-              style={{
-                animationDelay: `${i * 0.15}s`,
-                animationDuration: "1.5s",
-              }}
-            />
-          ))}
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 font-sans">
+      <div className="w-full max-w-sm bg-white rounded-[3rem] p-10 shadow-2xl border border-slate-100 text-center animate-fadeIn">
+        <div className="relative mb-10">
+          <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto">
+            <div className="text-5xl animate-bounce">⏳</div>
+          </div>
+          <div className="absolute top-0 left-1/2 -ml-12 w-24 h-24 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-cyan-400 animate-bounce shadow-lg shadow-cyan-500/50" />
-        </div>
-      </div>
-
-      <div className="text-center">
-        <h2 className="text-white text-xl font-bold mb-2">
+        
+        <h2 className="text-2xl font-bold text-slate-800 mb-3">รอก่อนนะ...</h2>
+        <p className="text-slate-500 text-lg leading-relaxed px-4">
           {message}
-        </h2>
-        <p className="text-slate-400 text-sm">
-          {description}
         </p>
-      </div>
-
-      {/* Animated dots */}
-      <div className="flex items-center gap-1">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"
-            style={{ animationDelay: `${i * 0.2}s` }}
-          />
-        ))}
+        
+        <div className="mt-12 pt-8 border-t border-slate-50">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-loose">
+            เตรียมตัวให้พร้อมสำหรับการต่อสู้!
+          </p>
+        </div>
       </div>
     </div>
   );
