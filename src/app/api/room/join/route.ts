@@ -115,7 +115,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ match: newMatch, role: "Alice" });
 
   } catch (error) {
-    console.error("[API Join Room]", error);
     return NextResponse.json({ message: "Failed to join room" }, { status: 500 });
   }
 }

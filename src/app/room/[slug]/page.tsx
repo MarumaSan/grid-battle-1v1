@@ -58,16 +58,6 @@ export default function RoomPage() {
         } : null);
       })
       .subscribe();
-roadcast", { event: "move" }, (payload) => {
-        // High-speed update from opponent's broadcast
-        const { matchState, nextPlayer } = payload.payload;
-        setMatch(prev => prev ? {
-          ...prev,
-          state: matchState,
-          current_player: nextPlayer
-        } : null);
-      })
-      .subscribe();
 
     return () => { channel.unsubscribe(); };
   }, [playerIdentifier, slug, joinRoom]);
@@ -99,21 +89,31 @@ roadcast", { event: "move" }, (payload) => {
     nextRemoved[currentPos.x] = [...nextRemoved[currentPos.x]];
     nextRemoved[currentPos.x][currentPos.y] = true;
 
+    const nextPlayer = role === "Alice" ? "Bob" : "Alice";
+    const nextState = { ...match.state, pos: nextPos, removed: nextRemoved };
+
+    // 1. Local Optimistic update
     setMatch(prev => {
       if (!prev) return null;
       return {
         ...prev,
-        state: {
-          ...prev.state,
-          pos: nextPos,
-          removed: nextRemoved
-        },
-        current_player: role === "Alice" ? "Bob" : "Alice" // Swap turn locally
+        state: nextState,
+        current_player: nextPlayer
       };
     });
 
+    // 2. High-speed Broadcast to opponent
+    supabase.channel(`match-${slug}`).send({
+      type: "broadcast",
+      event: "move",
+      payload: { 
+        matchState: nextState,
+        nextPlayer: nextPlayer
+      }
+    });
+
+    // 3. Persistent DB update
     move(match.id, direction).catch(err => {
-      // Revert handle by alerting (or background refresh)
       alert(`ล้มเหลวในการส่งข้อมูล: ${err.message}`);
     });
   };

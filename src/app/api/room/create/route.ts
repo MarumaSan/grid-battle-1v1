@@ -10,8 +10,6 @@ export async function POST(req: Request) {
     // Generate room code (6 chars)
     const room_code = nanoid(6).toUpperCase();
     
-    console.log("[API Create Room] Creating room:", room_code, config);
-
     const { data, error } = await supabase
       .from("gb_rooms")
       .insert([
@@ -25,18 +23,15 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (error) {
-      console.error("[API Create Room] Supabase Error:", error);
       return NextResponse.json({ message: error.message, details: error.details }, { status: 500 });
     }
 
     if (!data) {
-      console.error("[API Create Room] No data returned from insert");
       return NextResponse.json({ message: "No data returned from insert" }, { status: 500 });
     }
 
     return NextResponse.json({ roomId: room_code });
   } catch (error: any) {
-    console.error("[API Create Room] Server Error:", error);
     return NextResponse.json({ message: error.message || "Failed to create room" }, { status: 500 });
   }
 }
