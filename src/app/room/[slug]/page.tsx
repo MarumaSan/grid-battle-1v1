@@ -64,7 +64,39 @@ export default function RoomPage() {
     if (!match || !role) return;
     const isMyTurn = match.current_player === role;
     if (!isMyTurn || match.status !== "playing") return;
-    move(match.id, direction).catch(err => alert(err.message));
+
+    // Optimistic Update: Predict next position
+    const currentPos = match.state.pos;
+    if (!currentPos) return;
+
+    let nextPos = { ...currentPos };
+    if (direction === "up") nextPos.x--;
+    else if (direction === "down") nextPos.x++;
+    else if (direction === "left") nextPos.y--;
+    else if (direction === "right") nextPos.y++;
+
+    // Local state slice for instant feedback
+    const nextRemoved = [...match.state.removed];
+    nextRemoved[currentPos.x] = [...nextRemoved[currentPos.x]];
+    nextRemoved[currentPos.x][currentPos.y] = true;
+
+    setMatch(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        state: {
+          ...prev.state,
+          pos: nextPos,
+          removed: nextRemoved
+        },
+        current_player: role === "Alice" ? "Bob" : "Alice" // Swap turn locally
+      };
+    });
+
+    move(match.id, direction).catch(err => {
+      // Revert handle by alerting (or background refresh)
+      alert(`ล้มเหลวในการส่งข้อมูล: ${err.message}`);
+    });
   };
 
   useEffect(() => {
