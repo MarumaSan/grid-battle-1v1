@@ -270,7 +270,13 @@ export default function RoomPage() {
       <GameOverModal
         isOpen={match.status === "finished"}
         winner={match.winner}
-        onClose={() => router.push("/")}
+        onClose={() => {
+          if (role === "Observer") {
+            router.push(`/host/${slug}`);
+          } else {
+            router.push("/");
+          }
+        }}
         match={match}
         currentRole={role}
       />
