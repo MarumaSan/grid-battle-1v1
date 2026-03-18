@@ -27,8 +27,8 @@ export default function HomePage() {
       const finalConfig = { ...config, sList };
       const { roomId } = await createRoom(finalConfig);
       router.push(`/host/${roomId}`);
-    } catch (err) {
-      alert("Failed to create room");
+    } catch (err: any) {
+      alert(`Failed to create room: ${err.message}`);
     } finally {
       setLoading(false);
     }
