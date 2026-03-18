@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { Match, Position } from "@/lib/types";
+import { isValidPlacement } from "@/lib/gameLogic";
 
 export async function POST(req: Request) {
   try {
@@ -19,6 +20,11 @@ export async function POST(req: Request) {
 
     // 2. Validate move
     if (matchData.status !== "placing") throw new Error("Incorrect state");
+    
+    // Check if placement is valid (on an available cell)
+    if (!isValidPlacement(matchData.state.grid, pos)) {
+      throw new Error("Invalid placement: cell is not available");
+    }
 
     // 3. Mark cell as occupied
     const newState = { ...matchData.state };

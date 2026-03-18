@@ -76,6 +76,8 @@ export default function RoomPage() {
 
   const handleMove = (direction: "up" | "down" | "left" | "right") => {
     if (!match || !role) return;
+    const isMyTurn = match.current_player === role;
+    if (!isMyTurn) return;
     move(match.id, direction);
   };
 
