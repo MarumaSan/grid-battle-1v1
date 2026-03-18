@@ -163,15 +163,32 @@ export default function RoomPage() {
 
           {/* Center: Grid Area */}
           <section className="lg:col-span-6 flex flex-col items-center">
-            <GameGrid
-              grid={match.state.grid}
-              removed={match.state.removed}
-              pos={match.state.pos}
-              onCellClick={handleCellClick}
-              onMove={handleMove}
-              isMyTurn={isMyTurn}
-              status={match.status}
-            />
+            {match.status === "waiting_for_opponent" ? (
+              <div className="w-full bg-white rounded-[3rem] p-12 shadow-xl border-2 border-dashed border-slate-200 text-center animate-fadeIn">
+                <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <span className="text-5xl animate-pulse">⏳</span>
+                </div>
+                <h2 className="text-3xl font-black text-slate-800 mb-4">รอผู้ท้าชิง...</h2>
+                <p className="text-slate-500 text-lg mb-8 leading-relaxed">
+                  ขณะนี้กำลังรอผู้เล่นคนที่ 2 เข้าร่วมสมรภูมิ<br/>
+                  โปรดแชร์หมายเลขห้อง <span className="text-indigo-600 font-black">{slug}</span> ให้เพื่อนของคุณ
+                </p>
+                <div className="inline-block px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">สถานะปัจจุบัน</p>
+                  <p className="text-slate-600 font-bold">อลิซ (Alice) เชื่อมต่อแล้ว ✅</p>
+                </div>
+              </div>
+            ) : (
+              <GameGrid
+                grid={match.state.grid}
+                removed={match.state.removed}
+                pos={match.state.pos}
+                onCellClick={handleCellClick}
+                onMove={handleMove}
+                isMyTurn={isMyTurn}
+                status={match.status}
+              />
+            )}
           </section>
 
           {/* Right Side: Log & Controls */}
