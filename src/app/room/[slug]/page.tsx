@@ -177,11 +177,11 @@ export default function RoomPage() {
         </header>
 
         {/* Main Content Areas */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-start h-full">
           
           {/* Left Side: Stats & Info */}
-          <aside className="lg:col-span-3 space-y-6">
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
+          <aside className="lg:col-span-3 space-y-4 lg:space-y-6 order-2 lg:order-1">
+           <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-3">ข้อมูลผู้เล่น</h2>
               <div className="space-y-4">
                 <div className={`p-4 rounded-2xl border transition-all ${
